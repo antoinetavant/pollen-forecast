@@ -1,3 +1,4 @@
 *.nc
 .vscode/*
 .env
+**/__pycache__

@@ -26,10 +26,14 @@ classifiers = [
 ]
 dependencies = [
   "cdsapi",
+  "pandas",
   "xarray",
   "netCDF4",
   "matplotlib",
-  "nicegui",
+  "panel",
+  "watchfiles",
+  "hvplot",
+  "jupyter_bokeh",
 ]
 
 [project.urls]
