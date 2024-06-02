@@ -21,6 +21,10 @@ class PollenForcastCopernicusGeneric:
         self.date_start = start
         self.date_end = end or start
         self.model = model
+        if isinstance(variable, str):
+            variable = [variable]
+        elif not isinstance(variable, list):
+            raise ValueError("variable must be a string or a list of strings")
         self.variable = variable
         self.north = north
         self.south = south
@@ -40,7 +44,8 @@ class PollenForcastCopernicusGeneric:
             "leadtime_hour": self.leadtime_hour,
             "area": [self.north, self.west, self.south, self.east],
         }
-        self.filename = Path(self.prefix + f"/{self.variable}_{self.date_start}_{self.date_end}.nc")
+
+        self.filename = Path(self.prefix + f"/{'_'.join(self.variable)}_{self.date_start}_{self.date_end}.nc")
 
     def get_pollen_data(self):
 
