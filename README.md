@@ -8,7 +8,7 @@
 Pollen-Forecast is a tool to view the pollen forecast for a given location.
 It uses the forecast data from the Copernicus Data Store (CDS) API.
 
-Visualisation is done with NiceGui.
+Visualisation is done with HoloViz Pannel.
 
 ## Table of Contents
 
@@ -23,16 +23,13 @@ pip install pollen-forecast
 
 ## Usage
 
-Download the data using the Jupyter notebook `download_data.ipynb`.
 You need a ECMWF account to access the data (see [Resources](#resources)).
 
 Run the pollen forecast viewer with:
 
 ```console
-python src/pollen_forecast/main.py
+panel serve src/pollen_forecast/app.py
 ```
-
-If you provide a NiceGui Token in a dotenv file, it will print the URL to open in your browser.
 
 ## TODO
 
@@ -44,7 +41,13 @@ If you provide a NiceGui Token in a dotenv file, it will print the URL to open i
 
 ### CDS API
 
-The Copernicus Data Store (CDS) API is used to retrieve the pollen forecast data. The API requires an account to access the data. The API is documented [here](https://ads.atmosphere.copernicus.eu/api-how-to).
+The Copernicus Data Store (CDS) API is used to retrieve the pollen forecast data.
+The API requires an account to access the data.
+
+The API is documented [here](https://ads.atmosphere.copernicus.eu/api-how-to).
+Follow the instructions to create an account and get the API key.
+
+The API key should be stored in a file named `.cdsapirc` in the user's home directory.
 
 
 ## License
