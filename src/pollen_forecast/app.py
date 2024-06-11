@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import panel as pn
 from bokeh.models.formatters import DatetimeTickFormatter
-import param
 from pollen_forecast.copernicus import PollenForcastCopernicusGeneric
 import logging
 
@@ -136,8 +135,15 @@ bound_plot = pn.param.ParamFunction(
 
 # Create a TextInput to hold latitude and longitude
 # do not show it to the user with
-lat_input = pn.widgets.FloatInput(name='Latitude', placeholder='Latitude', disabled=True, visible=False)
-lon_input = pn.widgets.FloatInput(name='Longitude', placeholder='Longitude', disabled=True, visible=False)
+lat_input = pn.widgets.FloatInput(name='Latitude', placeholder='Latitude',
+                                  disabled=True,
+                                  visible=False,
+                                  )
+lon_input = pn.widgets.FloatInput(name='Longitude',
+                                  placeholder='Longitude',
+                                  disabled=True,
+                                  visible=False,
+                                  )
 
 # JavaScript code to fetch user location
 js_code = """
@@ -145,6 +151,14 @@ navigator.geolocation.getCurrentPosition(
     function(position) {
         lat_input.value = position.coords.latitude;
         lon_input.value = position.coords.longitude;
+    },
+    function(error) {
+        lat_input.value = -999;
+        lon_input.value = -999;
+    },
+    {timeout: 10000,
+    // highAccuracy: false,
+    maximumAge: 60000,
     }
 );
 """
@@ -156,8 +170,6 @@ def start_loading(event):
     app.loading = True
     get_location_button.disabled = True
 
-
-
 def stop_loading():
     app.loading = False
     get_location_button.disabled = False
@@ -168,6 +180,9 @@ get_location_button.on_click(start_loading)
 def handle_location_event(lat, lon):
     # closest city
     logger.info(f"Latitude: {lat}, Longitude: {lon}")
+    if lat == -999:
+        stop_loading()
+        return
     distances = np.sqrt((list_of_villes["latitude"] - lat)**2 + (list_of_villes["longitude"] - lon)**2)
     closest = distances.idxmin()
     commune = list_of_villes.loc[closest, "Nom Officiel Commune"]
