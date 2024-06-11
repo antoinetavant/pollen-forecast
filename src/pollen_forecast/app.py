@@ -4,17 +4,26 @@ import hvplot.pandas
 import numpy as np
 import pandas as pd
 import panel as pn
+from bokeh.models.formatters import DatetimeTickFormatter
+import param
+from pollen_forecast.copernicus import PollenForcastCopernicusGeneric
+import logging
 
-from copernicus import PollenForcastCopernicusGeneric
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 PRIMARY_COLOR = "#0072B5"
 SECONDARY_COLOR = "#B54300"
-CSV_FILE = (
-    "https://raw.githubusercontent.com/holoviz/panel/main/examples/assets/occupancy.csv"
-)
-pn.extension(design="material", sizing_mode="stretch_width", loading_spinner='dots', loading_color='#00aa41')
 
+pn.extension(
+             design="material",
+             sizing_mode="stretch_width",
+             loading_spinner='dots',
+             loading_color='#00aa41',
+             )
+
+# Define the translations for the pollen variables
 POLLEN_TRANSLATIONS = {
     "apg_conc": "Aulne",  #"Alder Pollen",
     "bpg_conc": "Bouleau",  #"Birch Pollen",
@@ -23,11 +32,17 @@ POLLEN_TRANSLATIONS = {
     "opg_conc": "Olive", #"Olive Pollen",
     "rwpg_conc": "Ambroisie", #"Ragweed Pollen",
 }
-# @pn.cache
+
 def get_data(date=pd.Timestamp("today").date(),
              latitude= 45.75,
              longitude= 4.85):
     print("Fetching data")
+    my_api = fetch_pollen_data(date)
+    print(f"{latitude=}, {longitude=}")
+    return my_api.pollen_data(latitude=latitude, longitude=longitude).rename(columns=POLLEN_TRANSLATIONS)
+
+@pn.cache
+def fetch_pollen_data(date):
     my_api = PollenForcastCopernicusGeneric(
         start=date,
         variable=[
@@ -47,26 +62,7 @@ def get_data(date=pd.Timestamp("today").date(),
     if not my_api.filename.exists():
         print("Downloading data")
         my_api.get_pollen_data()
-    print(f"{latitude=}, {longitude=}")
-    return my_api.pollen_data(latitude=latitude, longitude=longitude).rename(columns=POLLEN_TRANSLATIONS)
-
-
-
-print("Fetching list of cities")
-list_of_villes = pd.read_csv("georef-france-commune.csv")
-print("List of cities fetched")
-availables_villes = list_of_villes["Nom Officiel Commune"].unique().tolist()
-print("List of cities transformed")
-# champs de recherche pour villes
-ville_widget = pn.widgets.AutocompleteInput(
-    name="Ville",
-    options=availables_villes,
-    placeholder="Entrez une ville",
-    case_sensitive=False,
-    search_strategy='includes',
-    restrict=True,
-)
-print("Ville widget created")
+    return my_api
 
 
 def transform_data(data, variable, normalization=False):
@@ -78,10 +74,33 @@ def transform_data(data, variable, normalization=False):
     return selection
 
 
+
+def load_city_list():
+    print("Fetching list of cities")
+    list_of_villes = pd.read_csv("georef-france-commune.csv")
+    print("List of cities fetched")
+    availables_villes = list_of_villes["Nom Officiel Commune"].unique().tolist()
+    print("List of cities transformed")
+    return list_of_villes, sorted(availables_villes)
+
+list_of_villes, availables_villes = load_city_list()
+# champs de recherche pour villes
+ville_widget = pn.widgets.AutocompleteInput(
+    name="Ville",
+    options=availables_villes,
+    placeholder="Entrez une ville",
+    case_sensitive=False,
+    search_strategy='includes',
+    restrict=True,
+)
+logger.info("Ville widget created")
+
+variable_widget = pn.widgets.RadioBoxGroup(
+    name="variable", value="Graminées", options=list(POLLEN_TRANSLATIONS.values()), inline=True
+)
 def get_plot(variable="Graminées",
-             normalization=False,
-             date=pd.Timestamp("today").date(),
-             commune="Lyon"):
+             commune="Lyon",
+             ):
     """Plots the rolling average and the outliers"""
     print(f"{commune=}")
     if commune == "":
@@ -89,27 +108,98 @@ def get_plot(variable="Graminées",
     ville_line = list_of_villes[ list_of_villes["Nom Officiel Commune"] == commune]
     latitude = ville_line["latitude"].values[0]
     longitude = ville_line["longitude"].values[0]
-    data = get_data(date=date, latitude=latitude, longitude=longitude)
-    avg = transform_data(data, variable, normalization=normalization)
-    print(avg)
+    data = get_data(latitude=latitude, longitude=longitude)
+    avg = transform_data(data, variable, normalization=False)
     # add title the commune name
     avg = avg.hvplot(height=300, legend=False, color=PRIMARY_COLOR)
-    avg.opts(title=f"Prévision du pollen à {commune}")
+    # one tick every 3 hours
+    formatter = DatetimeTickFormatter(hours="%H:%M",
+                                      days="%a %d %b",
+                                      months="%m/%Y",
+                                      years="%Y")
+
+
+    avg.opts(title=f"Prévision du pollen à {commune}",
+                xlabel="Date",
+                ylabel="Concentration de pollen",
+                xformatter=formatter,
+
+                )
+
     return avg
 
-
-variable_widget = pn.widgets.CheckBoxGroup(
-    name="variable", value=["Graminées"], options=list(POLLEN_TRANSLATIONS.values())
-)
 
 bound_plot = pn.param.ParamFunction(
     pn.bind(get_plot, variable=variable_widget, commune=ville_widget),
     loading_indicator=True,
 )
 
-pn.template.MaterialTemplate(
-    site="Météo Pollen",
+# Create a TextInput to hold latitude and longitude
+# do not show it to the user with
+lat_input = pn.widgets.FloatInput(name='Latitude', placeholder='Latitude', disabled=True, visible=False)
+lon_input = pn.widgets.FloatInput(name='Longitude', placeholder='Longitude', disabled=True, visible=False)
+
+# JavaScript code to fetch user location
+js_code = """
+navigator.geolocation.getCurrentPosition(
+    function(position) {
+        lat_input.value = position.coords.latitude;
+        lon_input.value = position.coords.longitude;
+    }
+);
+"""
+
+get_location_button = pn.widgets.Button(name='⌖', width=50, description="Utiliser ma position")
+get_location_button.js_on_click(args={'lat_input': lat_input, 'lon_input': lon_input}, code=js_code)
+
+def start_loading(event):
+    app.loading = True
+    get_location_button.disabled = True
+
+
+
+def stop_loading():
+    app.loading = False
+    get_location_button.disabled = False
+
+get_location_button.on_click(start_loading)
+
+@pn.depends(lat_input, lon_input, watch=True)
+def handle_location_event(lat, lon):
+    # closest city
+    logger.info(f"Latitude: {lat}, Longitude: {lon}")
+    distances = np.sqrt((list_of_villes["latitude"] - lat)**2 + (list_of_villes["longitude"] - lon)**2)
+    closest = distances.idxmin()
+    commune = list_of_villes.loc[closest, "Nom Officiel Commune"]
+    logger.info(f"Closest city: {commune}")
+    ville_widget.value = commune
+    ville_widget.param.trigger("value")
+    stop_loading()
+
+
+
+app = pn.Column(
+    pn.pane.Markdown(
+        """
+        # Prévision du pollen
+
+        Ce graphique montre la prévision du pollen pour une ville donnée.
+        """
+    ),
+
+    pn.Row(variable_widget, ville_widget, get_location_button),
+    bound_plot,
+
+    lat_input,
+    lon_input,
+)
+
+server = pn.template.BootstrapTemplate(
     title="Prévision du pollen",
-    sidebar=[variable_widget, ville_widget],
-    main=[bound_plot],
-).servable()
+    main=[app],
+    header_background=PRIMARY_COLOR,
+    sidebar_width=300,
+    main_max_width="1000px",
+)
+
+server.servable()
