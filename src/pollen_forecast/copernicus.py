@@ -55,10 +55,13 @@ class PollenForcastCopernicusGeneric:
             target=self.filename)
         return self.filename
 
-    def pollen_data(self):
+    def pollen_data(self, latitude, longitude):
         ds = xr.open_dataset(self.filename)
-        df = ds.mean(
-            dim=["latitude", "longitude", "level"]
-        ).to_dataframe()
+        ds.coords["longitude"] = (ds.coords["longitude"] + 180 ) % 360 - 180
+
+        df = ds.sel(level=0,
+                    latitude=latitude,
+                    longitude=longitude,
+                    method='nearest').to_dataframe()
         df.index += pd.Timestamp(self.date_start)
         return df
