@@ -61,7 +61,10 @@ print("List of cities transformed")
 ville_widget = pn.widgets.AutocompleteInput(
     name="Ville",
     options=availables_villes,
-    placeholder="Entrez une ville"
+    placeholder="Entrez une ville",
+    case_sensitive=False,
+    search_strategy='includes',
+    restrict=True,
 )
 print("Ville widget created")
 
