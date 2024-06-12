@@ -10,16 +10,12 @@ It uses the forecast data from the Copernicus Data Store (CDS) API.
 
 Visualisation is done with HoloViz Pannel.
 
+You can access the application at [antoinetavant.fr/app](https://antoinetavant.fr/app).
+
 ## Table of Contents
 
 - [Installation](#installation)
 - [License](#license)
-
-## Installation
-
-```console
-pip install pollen-forecast
-```
 
 ## Usage
 
@@ -28,14 +24,8 @@ You need a ECMWF account to access the data (see [Resources](#resources)).
 Run the pollen forecast viewer with:
 
 ```console
-panel serve src/pollen_forecast/app.py
+hatch run prod:serve
 ```
-
-## TODO
-
-- [ ] add a button to download the data
-- [ ] compute averages for the historical data (5 or enven 10 years)
-- [ ] improve layout
 
 ## Resources
 
