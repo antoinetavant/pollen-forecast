@@ -32,7 +32,7 @@ POLLEN_TRANSLATIONS = {
     "rwpg_conc": "Ambroisie", #"Ragweed Pollen",
 }
 
-def get_data(date=pd.Timestamp("today").date(),
+def get_data(date=(pd.Timestamp("today") - pd.Timedelta("8h")).date(),
              latitude= 45.75,
              longitude= 4.85):
     print("Fetching data")
@@ -147,6 +147,10 @@ lon_input = pn.widgets.FloatInput(name='Longitude',
 
 # JavaScript code to fetch user location
 js_code = """
+lat_input.value = -999;
+lon_input.value = -999;
+setTimeout(function() {
+
 navigator.geolocation.getCurrentPosition(
     function(position) {
         lat_input.value = position.coords.latitude;
@@ -157,10 +161,9 @@ navigator.geolocation.getCurrentPosition(
         lon_input.value = -999;
     },
     {timeout: 10000,
-    // highAccuracy: false,
-    maximumAge: 60000,
-    }
-);
+    maximumAge: 60000
+    });
+    }, 100);
 """
 
 get_location_button = pn.widgets.Button(name='⌖', width=50, description="Utiliser ma position")
