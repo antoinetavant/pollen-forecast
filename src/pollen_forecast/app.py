@@ -21,8 +21,20 @@ pn.extension(
              loading_spinner='dots',
              loading_color='#00aa41',
              )
-
 impage_flower = pn.pane.JPG("https://upload.wikimedia.org/wikipedia/commons/4/47/Pollen_from_Dactylis_glomerata.jpg")
+
+template = pn.template.BootstrapTemplate(
+    title="Prévision du pollen",
+    sidebar=[impage_flower, "Visualisation de la prévision du pollen pour une ville donnée."],
+    main=[],
+    header_background=PRIMARY_COLOR,
+    sidebar_width=300,
+    main_max_width="1000px",
+    collapsed_sidebar=True,
+    modal=["Autorisez la géolocalisation pour obtenir la prévision du pollen pour votre ville."]
+)
+
+
 
 # Define the translations for the pollen variables
 POLLEN_TRANSLATIONS = {
@@ -149,8 +161,8 @@ lon_input = pn.widgets.FloatInput(name='Longitude',
 
 # JavaScript code to fetch user location
 js_code = """
-lat_input.value = -999;
-lon_input.value = -999;
+lat_input.value = -777;
+lon_input.value = -777;
 setTimeout(function() {
 
 navigator.geolocation.getCurrentPosition(
@@ -185,8 +197,13 @@ get_location_button.on_click(start_loading)
 def handle_location_event(lat, lon):
     # closest city
     logger.info(f"Latitude: {lat}, Longitude: {lon}")
-    if lat == -999:
+    if lat == -999 or lon == -999:
         stop_loading()
+        template.open_modal()
+        lat_input.value = -777
+        lon_input.value = -777
+        return
+    if lat == -777 or lon == -777:
         return
     distances = np.sqrt((list_of_villes["latitude"] - lat)**2 + (list_of_villes["longitude"] - lon)**2)
     closest = distances.idxmin()
@@ -223,15 +240,8 @@ footer_text = pn.pane.Markdown(
     """
 )
 
+template.main.append(app)
+template.main.append(footer_text)
 
-server = pn.template.BootstrapTemplate(
-    title="Prévision du pollen",
-    sidebar=[impage_flower, "Visualisation de la prévision du pollen pour une ville donnée."],
-    main=[app, footer_text],
-    header_background=PRIMARY_COLOR,
-    sidebar_width=300,
-    main_max_width="1000px",
-    collapsed_sidebar=True,
-)
 
-server.servable()
+template.servable()
