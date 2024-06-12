@@ -36,5 +36,5 @@ jobs:
           cd ${{vars.PROD_PATH}}
           git pull
           git lfs pull
-          nohup panel serve src/pollen_forecast/app.py --address 0.0.0.0 --port 5006 --allow-websocket-origin=antoinetavant.fr
+          nohup panel serve src/pollen_forecast/app.py --address 0.0.0.0 --port 5006 --allow-websocket-origin=antoinetavant.fr &
           EOF
