@@ -71,6 +71,8 @@ exclude_lines = [
 ]
 
 [tool.hatch.envs.prod]
-dependencies = []
+dependencies = [
+  "setuptools",
+]
 [tool.hatch.envs.prod.scripts]
 serve = "panel serve src/pollen_forecast/app.py --address 0.0.0.0 --port 5006 --allow-websocket-origin=antoinetavant.fr"

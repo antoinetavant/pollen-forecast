@@ -36,5 +36,5 @@ jobs:
           cd ${{vars.PROD_PATH}}
           git pull
           git lfs pull
-          nohup hatch run prod:serve &
+          hatch run prod:serve </dev/null  >./log-prod.log 2>&1 &
           EOF
