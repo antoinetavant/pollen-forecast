@@ -1,0 +1,43 @@
+
+name : Deploy Panel App
+
+concurrency: production
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy Panel App
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Deploy to Server
+        run: |
+          ssh ubuntu@${{ secrets.PROD_IP }} << 'EOF'
+          # Arrêter le serveur Panel
+          pkill -f 'panel serve'
+
+          # Naviguer vers le répertoire de l'application
+          cd /home/ubuntu/pollen-forecast
+
+          # Mettre à jour le dépôt
+          git pull
+
+          # Redémarrer le serveur Panel
+           nohup panel serve src/pollen_forecast/app.py --address 0.0.0.0 --port 5006 --allow-websocket-origin=antoinetavant.fr &
+          EOF
