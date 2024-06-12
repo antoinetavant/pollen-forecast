@@ -16,11 +16,13 @@ PRIMARY_COLOR = "#0072B5"
 SECONDARY_COLOR = "#B54300"
 
 pn.extension(
-             design="material",
+             design="bootstrap",
              sizing_mode="stretch_width",
              loading_spinner='dots',
              loading_color='#00aa41',
              )
+
+impage_flower = pn.pane.JPG("https://upload.wikimedia.org/wikipedia/commons/4/47/Pollen_from_Dactylis_glomerata.jpg")
 
 # Define the translations for the pollen variables
 POLLEN_TRANSLATIONS = {
@@ -212,12 +214,24 @@ app = pn.Column(
     lon_input,
 )
 
+footer_text = pn.pane.Markdown(
+    """
+    Ce graphique est basé sur les données de [Copernicus](https://www.copernicus.eu/en).
+    Elles sont mises à jour tous les jours à 8h UTC.
+
+    Le code source est disponible sur [GitHub](https://github.com/antoinetavant/pollen-forecast).
+    """
+)
+
+
 server = pn.template.BootstrapTemplate(
     title="Prévision du pollen",
-    main=[app],
+    sidebar=[impage_flower, "Visualisation de la prévision du pollen pour une ville donnée."],
+    main=[app, footer_text],
     header_background=PRIMARY_COLOR,
     sidebar_width=300,
     main_max_width="1000px",
+    collapsed_sidebar=True,
 )
 
 server.servable()
