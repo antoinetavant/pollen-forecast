@@ -32,9 +32,9 @@ jobs:
         run: |
           ssh ubuntu@${{secrets.PROD_IP}} << 'EOF'
           # Arrêter le serveur Panel
-          pkill -f 'panel serve'
+          pkill -f 'streamlit run'
           cd ${{vars.PROD_PATH}}
           git pull
           git lfs pull
-          nohup hatch run prod:serve </dev/null  >./log-prod.log 2>&1 &
+          nohup hatch run streamlit:serve </dev/null  >./log-prod.log 2>&1 &
           EOF
