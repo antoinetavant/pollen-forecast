@@ -35,6 +35,7 @@ dependencies = [
   "hvplot",
   "jupyter_bokeh",
   "cartopy",
+  "setuptools",
 ]
 
 [project.urls]
