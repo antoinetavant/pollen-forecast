@@ -6,7 +6,12 @@ import pandas as pd
 import panel as pn
 from bokeh.models.formatters import DatetimeTickFormatter
 from pollen_forecast.copernicus import PollenForcastCopernicusGeneric
+from pollen_forecast.cities import load_city_list, find_closest_city
 import logging
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+from cartopy import crs as ccrs
+import xarray as xr
 
 
 logger = logging.getLogger(__name__)
@@ -88,13 +93,6 @@ def transform_data(data, variable, normalization=False):
 
 
 
-def load_city_list():
-    print("Fetching list of cities")
-    list_of_villes = pd.read_csv("georef-france-commune.csv")
-    print("List of cities fetched")
-    availables_villes = list_of_villes["Nom Officiel Commune"].unique().tolist()
-    print("List of cities transformed")
-    return list_of_villes, sorted(availables_villes)
 
 list_of_villes, availables_villes = load_city_list()
 # champs de recherche pour villes
@@ -205,9 +203,7 @@ def handle_location_event(lat, lon):
         return
     if lat == -777 or lon == -777:
         return
-    distances = np.sqrt((list_of_villes["latitude"] - lat)**2 + (list_of_villes["longitude"] - lon)**2)
-    closest = distances.idxmin()
-    commune = list_of_villes.loc[closest, "Nom Officiel Commune"]
+    commune = find_closest_city(lat, lon, list_of_villes)
     logger.info(f"Closest city: {commune}")
     ville_widget.value = commune
     ville_widget.param.trigger("value")
@@ -231,6 +227,84 @@ app = pn.Column(
     lon_input,
 )
 
+tab_2_title = pn.pane.Markdown(
+    """
+    # Animation de la prévision du pollen
+    """
+)
+
+def get_all_ds():
+    date = pd.Timestamp("today") - pd.Timedelta("8h")
+    my_api = fetch_pollen_data(date.date())
+    ds = xr.open_dataset(my_api.filename)
+    ds.coords["longitude"] = (ds.coords["longitude"] + 180 ) % 360 - 180
+    return ds
+
+def plot_image(ds, ax, variable_name="Graminées", time_index=0):
+    # invert POLLEN_TRANSLATIONS to get the variable name
+    variable = {v: k for k, v in POLLEN_TRANSLATIONS.items()}[variable_name]
+
+    ax.set_title(f"Prévision du pollen pour les graminées\n à {times[time_index]}")
+
+    vmin = 0
+    vmax = ds[variable].max().values
+    try :
+        im = ax.images[0]
+        im.set_data(ds[variable].isel(time=time_index, level=0))
+    except IndexError:
+        im = ax.imshow(
+            ds[variable].isel(time=time_index, level=0),
+            transform=ccrs.PlateCarree(),
+            origin='upper',
+            extent=[ds.longitude.min(), ds.longitude.max(), ds.latitude.min(), ds.latitude.max()],
+            vmin=vmin,
+            vmax=vmax,
+            )
+    return fig
+
+ds = get_all_ds()
+max_time = len(ds.time) -1
+fig, ax = plt.subplots(
+        figsize=(6, 4),
+        subplot_kw={'projection': ccrs.PlateCarree()},
+        )
+times = pd.to_timedelta(ds.time.values)
+times += pd.Timestamp("today") - pd.Timedelta("8h") + pd.DateOffset(hour=0, minute=0, second=0, microsecond=0)
+ax.coastlines()
+plot_image(ds, ax, variable_name="Graminées", time_index=0)
+im = fig.gca().images[0]
+cb = plt.colorbar(im, ax=ax)
+cb.set_label("Concentration de pollen (gr/m³)")
+
+year = pn.widgets.Player(
+    value=0,
+    start=0,
+    end=max_time,
+    name="Forecast",
+    loop_policy="loop",
+    interval=800,
+    align="center",
+)
+
+tab2_map = pn.pane.Matplotlib(
+                              pn.bind(plot_image, ds=ds, ax=ax, time_index=year, variable_name=variable_widget),
+                            #   interactive=True,
+                              tight=True,
+                              sizing_mode="stretch_width",
+                              dpi=144,
+                              high_dpi = False,
+
+                              )
+
+tab2 = pn.Column(tab_2_title, variable_widget, year, tab2_map)
+
+tabs = pn.Tabs(
+    ("Prévision du pollen", app),
+    ("Animation", tab2),
+    tabs_location = "left",
+    dynamic = True,
+)
+
 footer_text = pn.pane.Markdown(
     """
     Ce graphique est basé sur les données de [Copernicus](https://www.copernicus.eu/en).
@@ -240,7 +314,7 @@ footer_text = pn.pane.Markdown(
     """
 )
 
-template.main.append(app)
+template.main.append(tabs)
 template.main.append(footer_text)
 
 
