@@ -80,7 +80,19 @@ serve = "panel serve src/pollen_forecast/app.py --address 0.0.0.0 --port 5006 --
 [tool.hatch.envs.taipy]
 dependencies = [
   "taipy",
+  "plotly"
 ]
 
 [tool.hatch.envs.taipy.scripts]
 serve = "python src/pollen_forecast/taipy_app.py"
+
+
+[tool.hatch.envs.streamlit]
+dependencies = [
+  "streamlit",
+  "streamlit-searchbox",
+  "streamlit-geolocation",
+]
+
+[tool.hatch.envs.streamlit.scripts]
+serve = "streamlit run src/pollen_forecast/streamlit_app.py"
