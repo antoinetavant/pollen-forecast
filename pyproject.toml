@@ -35,6 +35,7 @@ dependencies = [
   "hvplot",
   "jupyter_bokeh",
   "cartopy",
+  "setuptools",
 ]
 
 [project.urls]
@@ -76,4 +77,24 @@ dependencies = [
   "setuptools",
 ]
 [tool.hatch.envs.prod.scripts]
-serve = "panel serve src/pollen_forecast/app.py --address 0.0.0.0 --port 5006 --allow-websocket-origin=antoinetavant.fr"
+serve = "panel serve src/pollen_forecast/panel_app.py --address 0.0.0.0 --port 5006 --allow-websocket-origin=antoinetavant.fr"
+
+[tool.hatch.envs.taipy]
+dependencies = [
+  "taipy",
+  "plotly"
+]
+
+[tool.hatch.envs.taipy.scripts]
+serve = "python src/pollen_forecast/taipy_app.py"
+
+
+[tool.hatch.envs.streamlit]
+dependencies = [
+  "streamlit",
+  "streamlit-searchbox",
+  "streamlit-geolocation",
+]
+
+[tool.hatch.envs.streamlit.scripts]
+serve = "streamlit run --server.port 5006 --server.baseUrlPath app  src/pollen_forecast/app.py"
