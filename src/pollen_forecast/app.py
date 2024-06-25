@@ -1,12 +1,17 @@
 import streamlit as st
 import pandas as pd
 from pollen_forecast.pollen import get_data_at_location, list_of_pollen_names
-from pollen_forecast.cities import load_city_list, get_city_location, search_closest_city, find_closest_city
+from pollen_forecast.cities import get_city_location, search_closest_city, find_closest_city
 import altair as alt
 from streamlit_searchbox import st_searchbox
 from streamlit_geolocation import streamlit_geolocation
 
-st.set_page_config(initial_sidebar_state="collapsed")
+st.set_page_config(initial_sidebar_state="collapsed",
+                   page_title="Météo pollen",
+                   page_icon="🤧",
+                #    layout="wide",
+
+                   )
 st.title("Prévision du pollen")
 
 

@@ -12,7 +12,7 @@ def load_city_list():
     list_of_villes = pd.read_csv(filename)
     list_of_villes_sorted = list_of_villes.sort_values("population", ascending=False)
     availables_villes = list_of_villes_sorted["Nom Officiel Commune"].tolist()
-    return list_of_villes, availables_villes
+    return list_of_villes_sorted, availables_villes
 
 def get_city_location(city_name):
     list_of_villes, _ = load_city_list()
@@ -22,9 +22,13 @@ def get_city_location(city_name):
     return latitude, longitude
 
 def search_closest_city(city_name):
-    availables_villes = load_city_list()[1]
-    options = difflib.get_close_matches(city_name, availables_villes, n=5, cutoff=0.5)
-    return options
+    lists_of_cites, availables_villes = load_city_list()
+    options = difflib.get_close_matches(city_name, availables_villes, n=10, cutoff=0.6)
+    cities_selected = lists_of_cites[ lists_of_cites["Nom Officiel Commune"].isin(options)]
+    n=4
+    if len(cities_selected) > n:
+        cities_selected = cities_selected.head(n)
+    return cities_selected["Nom Officiel Commune"].tolist()
 
 def find_closest_city(lat: float, lon: float)-> str:
     # closest city
