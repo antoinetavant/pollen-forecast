@@ -97,4 +97,4 @@ dependencies = [
 ]
 
 [tool.hatch.envs.streamlit.scripts]
-serve = "streamlit run --server.port 5006 --server.baseUrlPath pollen  src/pollen_forecast/app.py"
+serve = "streamlit run --server.port 5006 --server.baseUrlPath pollen  --browser.gatherUsageStats false --server.runOnSave true   src/pollen_forecast/app.py"
