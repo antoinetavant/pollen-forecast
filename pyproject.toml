@@ -30,11 +30,8 @@ dependencies = [
   "xarray",
   "netCDF4",
   "matplotlib",
-  "panel",
   "watchfiles",
-  "hvplot",
-  "jupyter_bokeh",
-  "cartopy",
+  # "cartopy",
   "setuptools",
 ]
 
@@ -97,4 +94,4 @@ dependencies = [
 ]
 
 [tool.hatch.envs.streamlit.scripts]
-serve = "streamlit run --server.port 5006 --server.baseUrlPath pollen  --browser.gatherUsageStats false --server.runOnSave true   src/pollen_forecast/app.py"
+serve = "streamlit run --server.port 5006 --server.baseUrlPath pollen  --browser.gatherUsageStats false --server.runOnSave true   src/pollen_forecast/Météo_pollen.py"
