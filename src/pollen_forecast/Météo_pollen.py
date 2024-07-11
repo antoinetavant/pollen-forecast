@@ -99,7 +99,7 @@ my_barplot = (
         color=alt.Color(
             f"{polen_type}_niveau",
             scale=alt.Scale(
-                domain=level_names, range=["green", "yellow", "orange", "red", "purple"]
+                domain=level_names, range=["green", "gold", "orange", "red", "purple"]
             ),
             title="Niveau de risque",
         ),
