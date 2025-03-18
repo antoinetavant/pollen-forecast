@@ -28,11 +28,14 @@ dependencies = [
   "cdsapi",
   "pandas",
   "xarray",
-  "netCDF4",
+  "netcdf4",
   "matplotlib",
   "watchfiles",
   # "cartopy",
   "setuptools",
+  "django>=4.2.20",
+  "altair>=5.4.1",
+  "geoip2>=4.8.1",
 ]
 
 [project.urls]

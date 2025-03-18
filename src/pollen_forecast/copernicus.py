@@ -4,18 +4,19 @@ import pandas as pd
 from pathlib import Path
 
 class PollenForcastCopernicusGeneric:
-    def __init__(self,
-                 start="2024-05-26",
-                 end=None,
-                 model="ensemble",
-                 variable="grass_pollen",
-                 north=45.82,
-                 south=45.67,
-                 east=4.92,
-                 west=4.66,
-                 prefix=".",
-                 leadtime_hour=None
-                 ):
+    def __init__(
+        self,
+        start="2024-05-26",
+        end=None,
+        model="ensemble",
+        variable="grass_pollen",
+        north=45.82,
+        south=45.67,
+        east=4.92,
+        west=4.66,
+        prefix=Path.cwd(),
+        leadtime_hour=None,
+    ):
         self.c = cdsapi.Client()
         self.name = "cams-europe-air-quality-forecasts"
         self.date_start = start
@@ -32,7 +33,7 @@ class PollenForcastCopernicusGeneric:
         self.west = west
         self.leadtime_hour = leadtime_hour or [str(i) for i in range(0, 96)]
         self.level="0"
-        self.prefix = prefix
+        self.prefix = Path(prefix)
         self.params = {
             "model": self.model,
             'variable': self.variable,
@@ -45,10 +46,13 @@ class PollenForcastCopernicusGeneric:
             "area": [self.north, self.west, self.south, self.east],
         }
 
-        self.filename = Path(self.prefix + f"/{'_'.join(self.variable)}_{self.date_start}_{self.date_end}.nc")
+        self.filename = (
+            self.prefix
+            / f"{'_'.join(self.variable)}_{self.date_start}_{self.date_end}.nc"
+        )
 
     def get_pollen_data(self):
-
+        self.filename.parent.mkdir(parents=True, exist_ok=True)
         self.c.retrieve(
             name=self.name,
             request=self.params,

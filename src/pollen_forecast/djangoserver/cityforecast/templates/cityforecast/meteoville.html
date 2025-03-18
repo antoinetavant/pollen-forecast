@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Prévision du pollen</h1>
+
+<form id="pollenForm" method="post">
+    {% csrf_token %}
+    <label for="date">Date:</label>
+    <input type="date" id="date" name="date" value="{{ today }}">
+
+    <label for="city_name">Nom de la ville:</label>
+    <input type="text" id="city_name" name="city_name" value="{{ city_estimation}}">
+
+    <label for="polen_type">Type de pollen:</label>
+    <select id="polen_type" name="polen_type">
+        {% for pollen in list_of_pollen_names %}
+        <option value="{{ pollen }}" {% if pollen == "Graminées" %}selected{% endif %}>
+            {{ pollen }}
+        </option>
+        {% endfor %}
+    </select>
+
+    <button type="submit">Afficher la prévision</button>
+</form>
+
+<div id="chart-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+<script>
+document.getElementById('pollenForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const form = e.target;
+
+    const formData = new FormData(form);
+
+    fetch("", {
+        method: "POST",
+        body: formData,
+        headers: {
+            'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        const chartSpec = JSON.parse(data.chart);
+        vegaEmbed('#chart-container', chartSpec, {actions: false});
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
+</script>
+{% endblock %}

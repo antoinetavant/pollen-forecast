@@ -1,3 +1,4 @@
+from pathlib import Path
 from pollen_forecast.copernicus import PollenForcastCopernicusGeneric
 import pandas as pd
 import logging
@@ -47,11 +48,11 @@ def get_pollen_api(date) -> PollenForcastCopernicusGeneric:
             "olive_pollen",
             "ragweed_pollen",
         ],
-    north=51.70,
-    south=41.87,
-    east=8.74,
-    west=-5.33,
-    prefix="./france_territory/"
+        north=51.70,
+        south=41.87,
+        east=8.74,
+        west=-5.33,
+        prefix=Path("./france_territory/"),
     )
     if not my_api.filename.exists():
         logger.debug("Downloading Copernicus data")
