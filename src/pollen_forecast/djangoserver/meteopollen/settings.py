@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,13 +32,16 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'cityforecast',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django.contrib.postgres",
+    "django_q",
+    "rest_framework",
+    "cityforecast",
 ]
 
 MIDDLEWARE = [
@@ -76,9 +80,9 @@ WSGI_APPLICATION = 'meteopollen.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": ":memory:" if "test" in sys.argv else BASE_DIR / "db.sqlite3",
     }
 }
 
@@ -123,3 +127,14 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+## Django-q configuration
+Q_CLUSTER = {
+    "name": "DjangoORM",
+    "orm": "default",  # Use the Django ORM backend
+    "workers": 1,  # Number of worker processes (adjust based on your needs)
+    "timeout": 60,  # Task timeout in seconds
+    "retry": 120,  # Retry time in seconds (how long to wait before retrying failed tasks)
+    "catch_up": False,  # If set to False, only run tasks when they are scheduled
+    "schedule": False,  # Disable the automatic schedule of tasks (can be managed manually)
+}

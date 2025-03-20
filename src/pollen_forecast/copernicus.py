@@ -60,7 +60,7 @@ class PollenForcastCopernicusGeneric:
         return self.filename
 
     def pollen_data(self, latitude, longitude):
-        ds = xr.open_dataset(self.filename)
+        ds = xr.open_dataset(self.filename, decode_timedelta=True)
         ds.coords["longitude"] = (ds.coords["longitude"] + 180 ) % 360 - 180
 
         df = ds.sel(level=0,

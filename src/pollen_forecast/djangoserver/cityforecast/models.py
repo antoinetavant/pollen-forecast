@@ -3,8 +3,9 @@ import csv
 import os
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
-from django.apps import apps
+import logging
 
+logger = logging.getLogger(__name__)
 # Create your models here.
 class City(models.Model):
     """
@@ -35,17 +36,21 @@ class City(models.Model):
         - longitude
         - Is Prefecture
         """
+        logger.info("loading cities")
         csv_path = os.path.join(os.path.dirname(__file__), '../../../../data/georef-france-commune.csv')
         with open(csv_path, newline='', encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
-            for row in reader:
-                City.objects.get_or_create(
-                    official_department_name=row['Nom Officiel Département'],
-                    official_city_name=row['Nom Officiel Commune'],
-                    latitude=float(row['latitude']),
-                    longitude=float(row['longitude']),
-                    is_prefecture=row['is_prefecture'].lower() == 'true'
+            cities = [
+                City(
+                    official_department_name=row["Nom Officiel Département"],
+                    official_city_name=row["Nom Officiel Commune"],
+                    latitude=float(row["latitude"]),
+                    longitude=float(row["longitude"]),
+                    is_prefecture=row["is_prefecture"].lower() == "true",
                 )
+                for row in reader
+            ]
+            City.objects.bulk_create(cities, ignore_conflicts=True)
 
 # Signal to populate the database after migrations
 
@@ -58,3 +63,22 @@ def populate_cities(sender, **kwargs):
     if sender.name == 'cityforecast':
         if not City.objects.exists():
             City.populate_from_csv()
+
+
+class PollenConcentrationForecasted(models.Model):
+    """the pollen forcasted"""
+
+    forecasted_at = models.DateField(
+        default=None, help_text="The date and time when the forecast was made."
+    )
+    time = models.DateTimeField(
+        default=None, help_text="The date and time for which the forecast is valid."
+    )
+    cityname = models.CharField(
+        max_length=255, help_text="The official name of the city."
+    )
+    pollen_type = models.CharField(max_length=255, help_text="the pollen type")
+    value = models.FloatField(
+        verbose_name="concentration of the pollen",
+        default=None,
+    )

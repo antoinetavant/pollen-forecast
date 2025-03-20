@@ -36,6 +36,14 @@ dependencies = [
   "django>=4.2.20",
   "altair>=5.4.1",
   "geoip2>=4.8.1",
+  "django-q2>=1.7.6",
+  "blessed>=1.20.0",
+  "pytest-django>=4.10.0",
+  "pytest-sugar>=1.0.0",
+  "djangorestframework>=3.15.2",
+  "markdown>=3.7",
+  "django-filter>=24.3",
+  "psycopg2-binary>=2.9.10",
 ]
 
 [project.urls]
@@ -98,3 +106,11 @@ dependencies = [
 
 [tool.hatch.envs.streamlit.scripts]
 serve = "streamlit run --server.port 5006 --server.baseUrlPath pollen  --browser.gatherUsageStats false --server.runOnSave true   src/pollen_forecast/Météo_pollen.py"
+
+[tool.pytest.ini_options]
+log_cli = true
+addopts = "--nomigrations --reuse-db -vv"
+pythonpath = "src/pollen_forecast/djangoserver"
+DJANGO_SETTINGS_MODULE = "meteopollen.settings"
+# -- recommended but optional:
+python_files = ["test_*.py", "*_test.py", "testing/python/*.py"]

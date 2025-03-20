@@ -6,11 +6,19 @@ from pollen_forecast.cities import (
     find_closest_city,
     get_city_location,
     # search_closest_city,
+    find_closest_prefectures,
 )
 from pollen_forecast.pollen import get_data_at_location, list_of_pollen_names
+from cityforecast.tasks import load_pollen_data_for_prefectures
+
 from .geo import get_client_ip, get_location
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
+from .models import City
+from .models import PollenConcentrationForecasted
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Cache can be added via Django cache framework if needed
 
@@ -30,21 +38,39 @@ def pollen_forecast_view(request):
         selected_date = request.POST.get("date", today)
         city_name = request.POST.get("city_name", location["city"])
 
-        # Geolocation (latitude, longitude) - optional POST data
-        lat = request.POST.get("lat", location["latitude"])
-        lon = request.POST.get("lon", location["longitude"])
+        lat, lon = get_city_location(city_name)
 
-        # If lat and lon are provided, find the closest city
-        if lat and lon:
-            lat = float(lat)
-            lon = float(lon)
-            city_name = find_closest_city(lat, lon)
-        else:
-            lat, lon = get_city_location(city_name)
+        list_of_prefectures = pd.DataFrame.from_records(
+            City.objects.filter(is_prefecture=True).values(
+                "official_city_name", "latitude", "longitude"
+            )
+        ).rename(columns={"official_city_name": "Nom Officiel Commune"})
+        prefecture_name, lat, lon = find_closest_prefectures(
+            lat, lon, list_of_prefectures
+        )
+        print(prefecture_name)
+        # Fetch pollen data using the PollenConcentrationForecasted model
 
-        # Fetch pollen data
-        data = get_data_at_location(selected_date, lat, lon)
+        pollen_data = PollenConcentrationForecasted.objects.filter(
+            cityname=prefecture_name, forecasted_at=today
+        ).values()
 
+        # Convert the queryset to a pandas DataFrame
+        data = pd.DataFrame.from_records(pollen_data)
+        if data.empty:
+            logger.warning(
+                "the data has not be fetched. Fetching now. Check the scheduled task."
+            )
+            load_pollen_data_for_prefectures()
+            pollen_data = PollenConcentrationForecasted.objects.filter(
+                cityname=prefecture_name, forecasted_at=today
+            ).values()
+
+            # Convert the queryset to a pandas DataFrame
+            data = pd.DataFrame.from_records(pollen_data)
+        print(data["time"])
+        data = data.pivot_table(index="time", columns="pollen_type", values="value")
+        print(data)
         # Define levels and categories
         levels_graminees = [0, 4, 19, 50, 100, 9999]
         levels_herbes = [0, 9, 50, 100, 250, 9999]
@@ -99,7 +125,7 @@ def pollen_forecast_view(request):
 
     # If GET request, render the initial page with basic context
     context = {
-        "today": today,
+        "today": today.strftime("%Y-%m-%d"),  # Format the date for HTML input
         "list_of_pollen_names": list_of_pollen_names,
         "city_estimation": location["city"],
     }
