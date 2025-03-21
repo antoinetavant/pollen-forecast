@@ -40,94 +40,15 @@
         <span class="visually-hidden">Loading...</span>
     </div>
 </div>
-<div id="chart-container" class="mt-4 card mx-auto" style="max-width: 80%; padding: 20px;">
+<div id="chartjs-container" class="mt-4 card mx-auto" style="max-width: 80%; padding: 20px;">
     <div class="card-body">
-        <!-- Vega chart will be rendered here -->
+        <canvas id="chartjs-canvas"></canvas>
     </div>
 </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
-<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    function fetchAndRenderChart() {
-
-    const date = document.getElementById('date').value;
-    const cityName = document.getElementById('city_name').value;
-    const polenType = document.getElementById('polen_type').value;
-
-    const spinner = document.getElementById('loading-spinner');
-    spinner.classList.remove('d-none'); // Show the spinner
-
-    fetch(`/api/pollen-data/?date=${date}&city_name=${cityName}&pollen_type=${polenType}`)
-        .then(response => response.json())
-        .then(data => {
-            spinner.classList.add('d-none'); // Hide the spinner
-
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
-
-            // Prepare the data for Vega
-            // const chartData = Object.keys(data).map(time => ({
-            //    time: time,
-            //    value: data[time][polenType],
-            // }));
-            console.log("Chart Data:", data); // Debug the data passed to Vega
-
-// Prepare the Vega-Lite chart specification
-            const chartSpec = {
-                $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-                data: { values: data },
-                mark: "bar",
-                width: "container", // Use the full width of the container
-                height: 200, // Set a fixed height for the chart
-
-                encoding: {
-                    x: { field: "time", type: "temporal", title: "Date" },
-                    y: { field: polenType, type: "quantitative", title: polenType },
-                    color: {
-                        field: `${polenType}_niveau`,
-                        type: "nominal",
-                        scale: {
-                            domain: data.level_names,
-                            range: ["green", "gold", "orange", "red", "purple"]
-                        },
-                        title: "Niveau de risque"
-                    },
-                    tooltip: [ // Add tooltips for interactivity
-                        { field: "time", type: "temporal", title: "Time" },
-                        { field: polenType, type: "quantitative", title: polenType },
-                        { field: `${polenType}_niveau`, type: "nominal", title: "Risk Level" }
-                    ]
-                },
-                selection: { // Add zooming and panning
-                    grid: {
-                        type: "interval",
-                        bind: "scales"
-                    }
-                }
-            };
-
-            // Render the chart
-            vegaEmbed('#chart-container', chartSpec, { actions: false, renderer : "svg" });
-        })
-        .catch(error => {
-            spinner.classList.add('d-none'); // Hide the spinner
-            console.error('Error fetching data:', error);
-            alert('An error occurred while fetching data.');
-        });
-};
-
-// Call the function when the page loads
-document.addEventListener('DOMContentLoaded', function () {
-    fetchAndRenderChart();
-});
-
-// Add event listener for the button to fetch and render the chart on click
-document.getElementById('fetchData').addEventListener('click', fetchAndRenderChart);
 
 // Autocomplete logic for city name
 const cityInput = document.getElementById("city_name");
@@ -164,6 +85,109 @@ document.addEventListener("click", function (e) {
         suggestionsBox.innerHTML = "";
     }
 });
+
+let chartjsChart = null;
+
+async function fetchAndRenderChartJS() {
+    const date = document.getElementById('date').value;
+    const cityName = document.getElementById('city_name').value;
+    const polenType = document.getElementById('polen_type').value;
+
+    const spinner = document.getElementById('loading-spinner');
+    spinner.classList.remove('d-none'); // Show the spinner
+
+    try {
+        const response = await fetch(`/api/pollen-data/?date=${date}&city_name=${cityName}&pollen_type=${polenType}`);
+        const data = await response.json();
+        spinner.classList.add('d-none'); // Hide the spinner
+
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+
+        console.log("Chart Data for Chart.js:", data); // Debug the data passed to Chart.js
+
+        // Prepare the data for Chart.js
+        const labels = data.map(item => item.time); // Extract time labels
+        const values = data.map(item => item[polenType]); // Extract values for the selected pollen type
+        const colors = data.map(item => {
+            switch (item[`${polenType}_niveau`]) {
+                case "faible": return "green";
+                case "moderé": return "gold";
+                case "modéré-fort": return "orange";
+                case "fort": return "red";
+                case "très fort": return "purple";
+                default: return "gray";
+            }
+        });
+
+        // Destroy the previous chart instance if it exists
+        if (chartjsChart) {
+            chartjsChart.destroy();
+        }
+
+        // Create the Chart.js chart
+        const ctx = document.getElementById('chartjs-canvas').getContext('2d');
+        chartjsChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: polenType,
+                    data: values,
+                    backgroundColor: colors,
+                    borderColor: colors.map(color => color), // Use the same color for borders
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: polenType
+                        },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                const index = context.dataIndex;
+                                const riskLevel = data[index][`${polenType}_niveau`];
+                                return `${context.dataset.label}: ${context.raw} (${riskLevel})`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        spinner.classList.add('d-none'); // Hide spinner
+        console.error('Error fetching data for Chart.js:', error);
+        alert('An error occurred while fetching data.');
+    }
+}
+
+// Call both Vega and Chart.js rendering functions when the page loads
+document.addEventListener('DOMContentLoaded', function () {
+    fetchAndRenderChartJS(); // Chart.js chart
+});
+
+// Add event listener for the button to fetch and render both charts on click
+document.getElementById('fetchData').addEventListener('click', function () {
+    fetchAndRenderChartJS(); // Chart.js chart
+});
 </script>
 <style>
 /* Add some basic styling for the autocomplete suggestions */
@@ -193,16 +217,14 @@ document.addEventListener("click", function (e) {
     margin-top: 20px;
 }
 
-#chart-container {
+#chartjs-container {
     margin: 0 auto; /* Center the chart horizontally */
     max-width: 80%; /* Set the maximum width of the chart */
     padding: 20px; /* Add padding around the chart */
 }
 
-.vega-embed {
-    width: 100%; /* Ensure the chart takes up the full width of the container */
-    height: 500px; /* Set a fixed height for the chart */
-
+#chartjs-canvas {
+    height: 200px !important; /* Set the height of the Chart.js canvas */
 }
 </style>
 {% endblock %}
