@@ -44,6 +44,8 @@ dependencies = [
   "markdown>=3.7",
   "django-filter>=24.3",
   "psycopg2-binary>=2.9.10",
+  "django-debug-toolbar>=4.4.6",
+  "django-silk>=5.2.0",
 ]
 
 [project.urls]

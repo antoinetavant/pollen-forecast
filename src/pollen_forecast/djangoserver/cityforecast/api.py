@@ -45,7 +45,11 @@ class PollenDataAPI(APIView):
             return Response({"error": "City name is required"}, status=400)
 
         # Get city location
-        lat, lon = get_city_location(city_name)
+        try:
+            city = City.objects.get(official_city_name=city_name)
+            lat, lon = city.latitude, city.longitude
+        except City.DoesNotExist:
+            return Response({"error": "City not found"}, status=404)
 
         # Find the closest prefecture
         list_of_prefectures = pd.DataFrame.from_records(
@@ -84,7 +88,7 @@ class PollenDataAPI(APIView):
                 status=404,
             )
         # Pivot the data for easier processing
-        data = data.pivot_table(index="time", columns="pollen_type", values="value")
+        data = data.set_index("time")[["value"]].rename(columns={"value": pollen_type})
         # Define levels and categories
         levels_graminees = [0, 4, 19, 50, 100, 9999]
         levels_herbes = [0, 9, 50, 100, 250, 9999]

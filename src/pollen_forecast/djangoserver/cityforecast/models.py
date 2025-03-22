@@ -82,3 +82,10 @@ class PollenConcentrationForecasted(models.Model):
         verbose_name="concentration of the pollen",
         default=None,
     )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["cityname", "forecasted_at", "pollen_type"]),
+            # models.Index(fields=["forecasted_at"]),
+            # models.Index(fields=["cityname"]),
+        ]

@@ -41,17 +41,21 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "django_q",
     "rest_framework",
+    # "debug_toolbar",
+    "silk",
     "cityforecast",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # "debug_toolbar.middleware.DebugToolbarMiddleware",
+    "silk.middleware.SilkyMiddleware",
 ]
 
 ROOT_URLCONF = 'meteopollen.urls'
@@ -138,3 +142,5 @@ Q_CLUSTER = {
     "catch_up": False,  # If set to False, only run tasks when they are scheduled
     "schedule": False,  # Disable the automatic schedule of tasks (can be managed manually)
 }
+
+SILKY_PYTHON_PROFILER = True
