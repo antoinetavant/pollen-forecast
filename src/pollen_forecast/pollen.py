@@ -23,6 +23,27 @@ POLLEN_TRANSLATIONS = {
 
 list_of_pollen_names = list(POLLEN_TRANSLATIONS.values())
 
+# Define levels and categories
+levels_graminees = [0, 4, 19, 50, 100, 9999]
+levels_herbes = [0, 9, 50, 100, 250, 9999]
+levels_arbres = [0, 15, 90, 250, 1500, 9999]
+level_names = ["faible", "moderé", "modéré-fort", "fort", "très fort"]
+list_herbes = ["Ambroisie", "Armoise"]
+list_arbes = ["Aulne", "Bouleau", "Olive"]
+list_graminees = ["Graminées"]
+plant_types = {
+    "Ambroisie": "herbes",
+    "Armoise": "herbes",
+    "Aulne": "arbres",
+    "Bouleau": "arbres",
+    "Olive": "arbres",
+    "Graminées": "graminées",
+}
+levels_map = {
+    "arbres": levels_arbres,
+    "herbes": levels_herbes,
+    "graminées": levels_graminees,
+}
 
 def get_pollen_api(date) -> PollenForcastCopernicusGeneric:
     """Init the PollenForcastCopernicusGeneric object and download the data if needed.

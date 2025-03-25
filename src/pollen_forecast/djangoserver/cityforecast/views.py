@@ -10,6 +10,7 @@ from pollen_forecast.cities import (
 )
 from pollen_forecast.pollen import get_data_at_location, list_of_pollen_names
 from cityforecast.tasks import load_pollen_data_for_prefectures
+import json
 
 from .geo import get_client_ip, get_location
 from datetime import datetime
@@ -38,3 +39,13 @@ def pollen_forecast_view(request):
     }
 
     return render(request, "cityforecast/meteoville.html", context)
+
+def about_view(request):
+    context = {}
+    return render(request, "cityforecast/about.html", context)
+
+
+def map_view(request):
+    filename = "cityforecast\static\departements.geojson"
+    context = {}
+    return render(request, "cityforecast/map.html", context)

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+{% load static %}
+
+<h1> Prévision du pollen</h1>
+
+L'objectif de ce site est de visualiser la prévision du pollen pour une ville donnée en France.
+
+Il utilise les données de <a href="https://ads.atmosphere.copernicus.eu/cdsapp#!/dataset/cams-europe-air-quality-forecasts?tab=overview">Copernicus</a>.
+Les valeurs affichées correspondent à la médianes de differentes simulations.
+
+Les données sont disponibles chaque jour à 8h pour la journée en cours et les 4 jours suivants.
+
+<h2> Mise en garde</h2>
+Ce site est en cours de développement, il peut y avoir des erreurs dans les prévisions affichées.
+
+Pour des données plus fiables, vous pouvez consulter le site de <a href="https://pollens.fr/">RNSA</a>.
+
+<h2>Contact</h2>
+
+Pour toute question ou suggestion, vous pouvez me contacter par mail à l'adresse suivante: antoinetavant at hotmail.fr
+
+
+{% endblock %}

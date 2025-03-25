@@ -4,8 +4,8 @@ from rest_framework import status
 
 from cityforecast.tasks import load_pollen_data_for_prefectures
 from .models import PollenConcentrationForecasted, City
-from pollen_forecast.pollen import list_of_pollen_names
-from pollen_forecast.cities import find_closest_prefectures, get_city_location
+from pollen_forecast.pollen import plant_types, levels_map, level_names
+from pollen_forecast.cities import find_closest_prefectures
 import pandas as pd
 from datetime import datetime
 from django.db import connection
@@ -89,24 +89,12 @@ class PollenDataAPI(APIView):
             )
         # Pivot the data for easier processing
         data = data.set_index("time")[["value"]].rename(columns={"value": pollen_type})
-        # Define levels and categories
-        levels_graminees = [0, 4, 19, 50, 100, 9999]
-        levels_herbes = [0, 9, 50, 100, 250, 9999]
-        levels_arbres = [0, 15, 90, 250, 1500, 9999]
-        level_names = ["faible", "moderé", "modéré-fort", "fort", "très fort"]
-        list_herbes = ["Ambroisie", "Armoise"]
-        list_arbes = ["Aulne", "Bouleau", "Olive"]
-        list_graminees = ["Graminées"]
+
 
         # Add level names to data for chart coloring
-        for list_pollen, levels in zip(
-            [list_herbes, list_arbes, list_graminees],
-            [levels_herbes, levels_arbres, levels_graminees],
-        ):
-            for pollen in list_pollen:
-                if pollen_type is None or pollen == pollen_type:
-                    niveau_name = f"{pollen}_niveau"
-                    data[niveau_name] = pd.cut(data[pollen], levels, labels=level_names)
+        levels = levels_map[plant_types[pollen_type]]
+        niveau_name = f"{pollen_type}_niveau"
+        data[niveau_name] = pd.cut(data[pollen_type], levels, labels=level_names)
 
         # Convert the index (time) to strings
         data.index = data.index.strftime("%Y-%m-%dT%H:%M:%S")
