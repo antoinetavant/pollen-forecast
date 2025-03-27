@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
+from silk.profiling.profiler import silk_profile
 from cityforecast.tasks import (
     load_pollen_data_for_prefectures,
     load_pollen_data_fore_one_city,
@@ -130,6 +130,7 @@ def get_color(value, pollen_type):
 
 
 class DepartementGeoJSONAPI(APIView):
+    @silk_profile(name="DepartementGeoJSONAPI.get")
     def get(self, request, *args, **kwargs):
         # Extract query parameters
         selected_date = request.GET.get("date", datetime.today().date())
@@ -140,8 +141,7 @@ class DepartementGeoJSONAPI(APIView):
 
         # Annotate departements with the max pollen concentration for the given date and pollen type
         departements = (
-            Departements.objects.prefetch_related("cities")
-            .annotate(
+            Departements.objects.annotate(
                 max_pollen_concentration=Max(
                     "cities__pollenconcentrationforecasted__value",
                     filter=Q(
@@ -149,8 +149,7 @@ class DepartementGeoJSONAPI(APIView):
                         cities__pollenconcentrationforecasted__pollen_type=pollen_type,
                     ),
                 )
-            )
-            .filter(
+            ).filter(
                 max_pollen_concentration__isnull=False
             )  # Exclude departements with no data
         )
@@ -161,11 +160,11 @@ class DepartementGeoJSONAPI(APIView):
         # Build the GeoJSON response
         features = []
         for departement in departements:
-            try:
-                # Deserialize the coordinates stored as text
-                geometry = json.loads(departement.coordinates)
-            except json.JSONDecodeError:
-                continue  # Skip invalid geometry
+            # try:
+            #     # Deserialize the coordinates stored as text
+            #     geometry = json.loads(departement.coordinates)
+            # except json.JSONDecodeError:
+            #     continue  # Skip invalid geometry
 
             features.append(
                 {
@@ -179,7 +178,7 @@ class DepartementGeoJSONAPI(APIView):
                     },
                     "geometry": {
                         "type": departement.geometry_type,
-                        "coordinates": geometry,
+                        "coordinates": departement.coordinates,
                     },
                 }
             )
@@ -189,9 +188,15 @@ class DepartementGeoJSONAPI(APIView):
             "features": features,
         }
 
-        return JsonResponse(
+        response = JsonResponse(
             geojson,
             safe=False,
             json_dumps_params={"indent": 2},
             encoder=DjangoJSONEncoder,
         )
+        # Remove string quotes from geometry coordinates in the dumped JSON
+        # this is more like an hack that proper, but I don't what to seralize and desearize all the coordinates
+        response.content = response.content.replace(
+            b'"coordinates": "', b'"coordinates": '
+        ).replace(b']"\n', b"]\n")
+        return response
