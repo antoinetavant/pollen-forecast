@@ -59,14 +59,17 @@ const suggestionsBox = document.createElement("ul");
 suggestionsBox.classList.add("autocomplete-suggestions");
 cityInput.parentNode.appendChild(suggestionsBox);
 
+let currentFocus = -1;
+
 cityInput.addEventListener("input", function () {
     const query = cityInput.value;
+    currentFocus = -1; // Reset focus
     if (query.length > 1) {
         fetch(`/api/city-autocomplete/?q=${query}`)
             .then(response => response.json())
             .then(data => {
                 suggestionsBox.innerHTML = "";
-                data.forEach(city => {
+                data.forEach((city, index) => {
                     const suggestion = document.createElement("li");
                     suggestion.textContent = city;
                     suggestion.classList.add("list-group-item", "list-group-item-action");
@@ -81,6 +84,32 @@ cityInput.addEventListener("input", function () {
         suggestionsBox.innerHTML = "";
     }
 });
+
+cityInput.addEventListener("keydown", function (e) {
+    const items = suggestionsBox.getElementsByTagName("li");
+    if (e.key === "ArrowDown") {
+        currentFocus++;
+        if (currentFocus >= items.length) currentFocus = 0;
+        highlightSuggestion(items);
+    } else if (e.key === "ArrowUp") {
+        currentFocus--;
+        if (currentFocus < 0) currentFocus = items.length - 1;
+        highlightSuggestion(items);
+    } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (currentFocus > -1 && items[currentFocus]) {
+            items[currentFocus].click();
+        }
+    }
+});
+
+function highlightSuggestion(items) {
+    Array.from(items).forEach(item => item.classList.remove("active"));
+    if (items[currentFocus]) {
+        items[currentFocus].classList.add("active");
+        items[currentFocus].scrollIntoView({ block: "nearest" });
+    }
+}
 
 // Hide suggestions when clicking outside
 document.addEventListener("click", function (e) {
@@ -124,6 +153,12 @@ document.getElementById('fetchData').addEventListener('click', function () {
 .autocomplete-suggestions li:hover {
     background-color: #f0f0f0;
 }
+
+.autocomplete-suggestions li.active {
+    background-color: #f0f0f0;
+
+}
+
 #loading-spinner {
     margin-top: 20px;
 }

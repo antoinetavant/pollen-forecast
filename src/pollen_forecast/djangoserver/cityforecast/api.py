@@ -34,7 +34,9 @@ class CityAutocompleteAPI(APIView):
                 ).filter(similarity__gt=0.3).order_by('-similarity')[:10]
             else:
                 # Fallback for SQLite or other databases
-                cities = City.objects.filter(official_city_name__icontains=query)[:10]
+                cities = City.objects.filter(
+                    official_city_name__icontains=query
+                ).order_by("-population")[:5]
             
             city_names = list(cities.values_list("official_city_name", flat=True))
             return Response(city_names, status=status.HTTP_200_OK)
