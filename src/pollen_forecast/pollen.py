@@ -81,13 +81,16 @@ def get_pollen_api(date) -> PollenForcastCopernicusGeneric:
     return my_api
 
 
-def get_data_at_location(date=(pd.Timestamp("today") - pd.Timedelta("8h")).date(),
-             latitude= 45.75,
-             longitude= 4.85):
+def get_data_at_location(
+    date=(pd.Timestamp("today") - pd.Timedelta("8h")).date(),
+    latitude=45.75,
+    longitude=4.85,
+    pollen_api=None,
+):
     """Return a DataFrom with the pollen data for the given date and location.
     Columns are renamed using the POLLEN_TRANSLATIONS dictionary.
     """
     logger.debug("Fetching data")
-    my_api = get_pollen_api(date)
+    my_api = pollen_api or get_pollen_api(date)
     logger.debug(f"{latitude=}, {longitude=}")
     return my_api.pollen_data(latitude=latitude, longitude=longitude).rename(columns=POLLEN_TRANSLATIONS)

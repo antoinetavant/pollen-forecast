@@ -84,7 +84,10 @@ class City(models.Model):
     latitude = models.FloatField(help_text="The latitude of the city.")
     longitude = models.FloatField(help_text="The longitude of the city.")
     is_prefecture = models.BooleanField(
-        help_text="Indicates if the city is a prefecture."
+        help_text="Indicates if the city is a prefecture.", default=False
+    )
+    is_sous_prefecture = models.BooleanField(
+        help_text="Indicates if the city is a sous-prefecture.", default=False
     )
     departement = models.ForeignKey(
         Departements,
@@ -92,6 +95,9 @@ class City(models.Model):
         related_name="cities",
         help_text="The department to which the city belongs.",
         default=None,
+    )
+    population = models.PositiveIntegerField(
+        verbose_name="The population of the city at the 2021 sensus", default=None
     )
 
     def __str__(self):
@@ -110,7 +116,9 @@ class City(models.Model):
         - Nom Officiel Commune
         - latitude
         - longitude
-        - Is Prefecture
+        - population
+        - is_prefecture
+        - is_sous_prefecture
         """
         logger.info("loading cities")
         csv_path = os.path.join(
@@ -120,7 +128,8 @@ class City(models.Model):
             reader = csv.DictReader(csvfile)
             cities = []
             for row in reader:
-                if not row["is_prefecture"]:
+                if not (row["is_prefecture"] or row["is_sous_prefecture"]):
+                    # do not upload a city that is not relevante
                     continue
                 try:
                     departement = Departements.objects.get(
@@ -131,14 +140,19 @@ class City(models.Model):
                         f"Departement '{row['Nom Officiel Département']}' not found. Skipping city '{row['Nom Officiel Commune']}'."
                     )
                     continue
-
+                if row["population"] == "":
+                    population = None
+                else:
+                    population = float(row["population"])
                 city = City(
                     official_department_name=row["Nom Officiel Département"],
                     official_city_name=row["Nom Officiel Commune"],
                     latitude=float(row["latitude"]),
                     longitude=float(row["longitude"]),
                     is_prefecture=row["is_prefecture"].lower() == "true",
+                    is_sous_prefecture=row["is_sous_prefecture"].lower() == "true",
                     departement=departement,
+                    population=population,
                 )
                 cities.append(city)
 
