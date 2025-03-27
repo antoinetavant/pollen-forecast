@@ -42,7 +42,9 @@ INSTALLED_APPS = [
     "django_q",
     "rest_framework",
     # "debug_toolbar",
-    "silk",
+    # "djgeojson",
+    # "leaflet",
+    # "silk",
     "cityforecast",
 ]
 
@@ -55,7 +57,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # "debug_toolbar.middleware.DebugToolbarMiddleware",
-    "silk.middleware.SilkyMiddleware",
+    # "silk.middleware.SilkyMiddleware",
 ]
 
 ROOT_URLCONF = 'meteopollen.urls'
@@ -143,4 +145,4 @@ Q_CLUSTER = {
     "schedule": False,  # Disable the automatic schedule of tasks (can be managed manually)
 }
 
-SILKY_PYTHON_PROFILER = True
+# SILKY_PYTHON_PROFILER = True

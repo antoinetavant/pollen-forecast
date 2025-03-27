@@ -46,6 +46,10 @@ def about_view(request):
 
 
 def map_view(request):
-    filename = "cityforecast\static\departements.geojson"
-    context = {}
+    # Handle the date input (defaults to today)
+    today = datetime.today().date()
+    context = {
+        "today": today.strftime("%Y-%m-%d"),  # Format the date for HTML input
+        "list_of_pollen_names": list_of_pollen_names,
+    }
     return render(request, "cityforecast/map.html", context)

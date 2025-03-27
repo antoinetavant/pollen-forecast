@@ -1,6 +1,6 @@
 from django.urls import include, path
 from . import views
-from .api import CityAutocompleteAPI, PollenDataAPI
+from .api import CityAutocompleteAPI, PollenDataAPI, DepartementGeoJSONAPI
 
 urlpatterns = [
     path("", views.pollen_forecast_view, name="ville"),
@@ -11,6 +11,11 @@ urlpatterns = [
         CityAutocompleteAPI.as_view(),
         name="city_autocomplete_api",
     ),
+    path(
+        "api/departements-geojson/",
+        DepartementGeoJSONAPI.as_view(),
+        name="departements_geojson_api",
+    ),
     path("api/pollen-data/", PollenDataAPI.as_view(), name="pollen_data_api"),
-    path("silk/", include("silk.urls", namespace="silk")),
+    # path("silk/", include("silk.urls", namespace="silk")),
 ]
