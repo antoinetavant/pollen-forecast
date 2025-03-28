@@ -46,6 +46,7 @@ dependencies = [
   "psycopg2-binary>=2.9.10",
   "django-debug-toolbar>=4.4.6",
   "django-silk>=5.2.0",
+  "gunicorn>=23.0.0",
 ]
 
 [project.urls]
