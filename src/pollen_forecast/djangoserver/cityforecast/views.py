@@ -30,12 +30,23 @@ def pollen_forecast_view(request):
 
     ip = get_client_ip(request=request)
     location = get_location(ip)
+    # Find the closest prefecture as the ip geolocation is not very precise
+    list_of_prefectures = pd.DataFrame.from_records(
+        City.objects.filter(is_prefecture=True).values(
+            "official_city_name", "latitude", "longitude"
+        )
+    ).rename(columns={"official_city_name": "Nom Officiel Commune"})
+    prefecture_name, latitude, longitude = find_closest_prefectures(
+        lat=location["latitude"],
+        lon=location["longitude"],
+        list_of_prefectures=list_of_prefectures,
+    )
 
     # If GET request, render the initial page with basic context
     context = {
         "today": today.strftime("%Y-%m-%d"),  # Format the date for HTML input
         "list_of_pollen_names": list_of_pollen_names,
-        "city_estimation": location["city"],
+        "city_estimation": prefecture_name,
     }
 
     return render(request, "cityforecast/meteoville.html", context)
