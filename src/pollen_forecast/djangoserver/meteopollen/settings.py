@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     # "debug_toolbar",
     # "djgeojson",
     # "leaflet",
-    # "silk",
+    "silk",
     "cityforecast",
 ]
 
@@ -57,7 +57,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # "debug_toolbar.middleware.DebugToolbarMiddleware",
-    # "silk.middleware.SilkyMiddleware",
+    "silk.middleware.SilkyMiddleware",
 ]
 
 ROOT_URLCONF = 'meteopollen.urls'
