@@ -64,3 +64,11 @@ def map_view(request):
         "list_of_pollen_names": list_of_pollen_names,
     }
     return render(request, "cityforecast/map.html", context)
+
+
+def history_view(request):
+    # Handle the date input (defaults to today)
+    context = {
+        "list_of_pollen_names": list_of_pollen_names,
+    }
+    return render(request, "cityforecast/history.html", context)

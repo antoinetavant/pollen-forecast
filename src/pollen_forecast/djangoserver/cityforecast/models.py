@@ -5,6 +5,7 @@ import os
 from django.db.models.signals import post_migrate
 from django.dispatch import receiver
 import logging
+from pollen_forecast.pollen import POLLEN_TRANSLATIONS
 
 logger = logging.getLogger(__name__)
 
@@ -189,6 +190,43 @@ class PollenConcentrationForecasted(models.Model):
         ]
 
 
+class PollenConcentrationHistory(models.Model):
+    """the pollen forcasted"""
+
+    time = models.DateTimeField(
+        default=None, help_text="The date and time for which the forecast is valid."
+    )
+    pollen_type = models.CharField(max_length=255, help_text="the pollen type")
+    value = models.FloatField(
+        verbose_name="concentration of the pollen",
+        default=None,
+    )
+
+    @staticmethod
+    def populate_from_csv():
+        """
+        Populates the model with data from a CSV file located in the
+        'data' folder. The CSV file should have the following columns:
+        """
+        logger.info("loading historical data")
+        csv_path = os.path.join(
+            os.path.dirname(__file__), "../../../../data/daily_mean_pollen_2023.csv"
+        )
+        with open(csv_path, newline="", encoding="utf-8") as csvfile:
+            reader = csv.DictReader(csvfile)
+            pollens = []
+            for row in reader:
+                for key, name in POLLEN_TRANSLATIONS.items():
+                    pollen = PollenConcentrationHistory(
+                        time=row["time"], pollen_type=name, value=row[key]
+                    )
+                    pollens.append(pollen)
+
+            PollenConcentrationHistory.objects.bulk_create(
+                pollens, ignore_conflicts=True
+            )
+
+
 # Signal to populate the database after migrations
 
 
@@ -203,3 +241,5 @@ def populate_cities(sender, **kwargs):
             Departements.populate_from_geojson()
         if not City.objects.exists():
             City.populate_from_csv()
+        if not PollenConcentrationHistory.objects.exists():
+            PollenConcentrationHistory.populate_from_csv()

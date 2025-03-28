@@ -6,7 +6,12 @@ from cityforecast.tasks import (
     load_pollen_data_for_prefectures,
     load_pollen_data_fore_one_city,
 )
-from .models import PollenConcentrationForecasted, City, Departements
+from .models import (
+    PollenConcentrationForecasted,
+    City,
+    Departements,
+    PollenConcentrationHistory,
+)
 from pollen_forecast.pollen import plant_types, levels_map, level_names
 from pollen_forecast.cities import find_closest_prefectures
 import pandas as pd
@@ -115,6 +120,37 @@ class PollenDataAPI(APIView):
         data = data.reset_index(names="time")
         return Response(data.to_dict(orient="records"))
 
+class PollenHistoryAPI(APIView):
+    def get(self, request, *args, **kwargs):
+        # Extract query parameters
+        pollen_type = request.GET.get("pollen_type", None)
+        if pollen_type is None:
+            pollen_type = "Bouleau"
+        # Fetch pollen data
+        pollen_data = (
+            PollenConcentrationHistory.objects.filter(
+                pollen_type=pollen_type,
+            )
+            .only("time", "value")
+            .values()
+        )
+        # Convert the queryset to a pandas DataFrame
+        data = pd.DataFrame.from_records(pollen_data)
+        # Pivot the data for easier processing
+        data = data.set_index("time")[["value"]].rename(columns={"value": pollen_type})
+
+        # Add level names to data for chart coloring
+        levels = levels_map[plant_types[pollen_type]]
+        niveau_name = f"{pollen_type}_niveau"
+        data[niveau_name] = pd.cut(
+            data[pollen_type], levels, labels=level_names
+        ).fillna(level_names[0])
+
+        # Convert the index (time) to strings
+        data.index = data.index.strftime("%Y-%m-%dT%H:%M:%S")
+        data = data.reset_index(names="time")
+        print(data)
+        return Response(data.to_dict(orient="records"))
 
 def get_color(value, pollen_type):
     levels = levels_map[plant_types[pollen_type]]
