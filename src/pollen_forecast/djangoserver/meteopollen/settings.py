@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     # "debug_toolbar",
     # "djgeojson",
     # "leaflet",
+    "corsheaders",
     "silk",
     "cityforecast",
 ]
@@ -51,6 +52,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -147,3 +149,7 @@ Q_CLUSTER = {
 
 # SILKY_PYTHON_PROFILER = True
 # SILKY_PYTHON_PROFILER_BINARY = True
+
+CORS_ALLOWED_ORIGINS = [
+    "https://umami.home.antoinetavant.fr",
+]
