@@ -47,6 +47,7 @@ dependencies = [
   "django-debug-toolbar>=4.4.6",
   "django-silk>=5.2.0",
   "gunicorn>=23.0.0",
+  "django-cors-headers>=4.4.0",
 ]
 
 [project.urls]
