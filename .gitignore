@@ -5,3 +5,4 @@
 uv.lock
 src/pollen_forecast/djangoserver/db.sqlite3
 GeoLite2-City_20250311*
+*.prof

@@ -102,7 +102,7 @@ async function loadData() {
           return;
       }
 
-  console.log("Chart Data for Chart.js:", data); // Debug the data passed to Chart.js
+  //   console.log("Chart Data for Chart.js:", data); // Debug the data passed to Chart.js
   geojson = L.geoJson(data, {style: styleFeature,
     onEachFeature: onEachFeature}).addTo(map);
   } catch (error) {
