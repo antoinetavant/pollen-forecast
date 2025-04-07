@@ -1,0 +1,57 @@
+services:
+  web:
+    build:
+      context: .
+    command: sh -c "make run"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.dev
+    environment:
+      - DJANGO_SETTINGS_MODULE=pollen_forecast.djangoserver.meteopollen.settings.dev
+    depends_on:
+      - db
+    networks:
+      - django_network
+
+  migrate:
+    profiles: ["migrate"]
+    build:
+      context: .
+    entrypoint: ["/entrypoint.migrate.sh"]
+    volumes:
+      - .:/app
+    env_file:
+      - .env.dev
+    environment:
+      - DJANGO_SETTINGS_MODULE=pollen_forecast.djangoserver.meteopollen.settings.dev
+    depends_on:
+      - db
+    networks:
+      - django_network
+
+  db:
+    image: postgres:latest
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - .env.dev
+    networks:
+      - django_network
+    
+  redis:
+    image: 'redis:alpine'
+    hostname: redis
+    ports:
+      - 6379:6379
+    networks:
+      - django_network
+
+volumes:
+  postgres_data:
+
+networks:
+  django_network:
+    driver: bridge

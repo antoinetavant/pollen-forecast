@@ -1,3 +1,4 @@
+import os
 import cdsapi
 import xarray as xr
 import pandas as pd
@@ -17,7 +18,7 @@ class PollenForcastCopernicusGeneric:
         prefix=Path.cwd(),
         leadtime_hour=None,
     ):
-        self.c = cdsapi.Client()
+        self.c = cdsapi.Client(url=os.environ.get("CDSAPI_URL"), key=os.environ.get("CDSAPI_KEY"))
         self.name = "cams-europe-air-quality-forecasts"
         self.date_start = start
         self.date_end = end or start

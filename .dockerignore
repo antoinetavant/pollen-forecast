@@ -1,27 +1,61 @@
-**/__pycache__
-**/.venv
-**/.classpath
-**/.dockerignore
-**/.env
-**/.git
-**/.gitignore
-**/.project
-**/.settings
-**/.toolstarget
-**/.vs
-**/.vscode
-**/*.*proj.user
-**/*.dbmdl
-**/*.jfm
-**/bin
-**/charts
-**/docker-compose*
-**/compose*
-**/Dockerfile*
-**/node_modules
-**/npm-debug.log
-**/obj
-**/secrets.dev.yaml
-**/values.dev.yaml
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Database
+*.sqlite3
+*.db
+
+# Logs
+*.log
+
+# Local development
+.DS_Store
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Raw Data
 **.zip
 **.tar.gz

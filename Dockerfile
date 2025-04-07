@@ -1,28 +1,33 @@
-# For more information, please refer to https://aka.ms/vscode-docker-python
-FROM python:3-slim
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+
+WORKDIR /app
+
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+
+COPY entrypoint.sh /entrypoint.sh
+COPY entrypoint.migrate.sh /entrypoint.migrate.sh
+
+RUN apt-get update && \
+    apt-get install -y libpq-dev gcc build-essential curl && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    uv sync --frozen --no-install-project --no-dev
+
+ADD . /app
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
+
+RUN curl -o /usr/local/bin/wait-for-it.sh https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && \
+    chmod +x /usr/local/bin/wait-for-it.sh
+
+ENV PATH="/app/.venv/bin:$PATH"
 
 EXPOSE 8000
 
-# Keeps Python from generating .pyc files in the container
-ENV PYTHONDONTWRITEBYTECODE=1
 
-# Turns off buffering for easier container logging
-ENV PYTHONUNBUFFERED=1
-
-# Install pip requirements
-COPY requirements.txt .
-RUN python -m pip install -r requirements.txt
-
-WORKDIR /app
-COPY . /app
-
-RUN python -m pip install .
-
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
-USER appuser
-
-WORKDIR /app/src/pollen_forecast/djangoserver
-ENTRYPOINT ["python"]
-CMD ["manage.py", "runserver", "0.0.0.0:8000"]
+ENTRYPOINT ["/entrypoint.sh"]

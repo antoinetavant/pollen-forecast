@@ -28,5 +28,5 @@ urlpatterns = [
         PollenHistoryAPI.as_view(),
         name="pollen_history_data_api",
     ),
-    # path("silk/", include("silk.urls", namespace="silk")),
+    path("silk/", include("silk.urls", namespace="silk")),
 ]

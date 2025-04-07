@@ -142,7 +142,7 @@ class City(models.Model):
                     )
                     continue
                 if row["population"] == "":
-                    population = None
+                    population = 1
                 else:
                     population = float(row["population"])
                 city = City(

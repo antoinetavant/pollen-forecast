@@ -12,19 +12,25 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import sys
+import os
+from dotenv import load_dotenv
+from pollen_forecast import ROOT_DIR
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
+#change to .env.prod for production !!!
+env_file = os.getenv("ENV_FILE", ".env.dev")
+
+load_dotenv(ROOT_DIR / env_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-+^c@vxe(7#(jcp95xgg$h(_+%-52v@yo*7kp+6&*ib(38%lkdt'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+SECRET_KEY = os.getenv("SECRET_KEY")
+DEBUG = os.getenv("DEBUG")
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS").split(",")
 
 ALLOWED_HOSTS = ["pollen.antoinetavant.fr", "127.0.0.1"]
 
@@ -32,6 +38,7 @@ ALLOWED_HOSTS = ["pollen.antoinetavant.fr", "127.0.0.1"]
 # Application definition
 
 INSTALLED_APPS = [
+    "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -41,19 +48,38 @@ INSTALLED_APPS = [
     "django.contrib.postgres",
     "django_q",
     "rest_framework",
+    "django_extensions",
     # "debug_toolbar",
     # "djgeojson",
     # "leaflet",
     "corsheaders",
     "silk",
     "cityforecast",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
 ]
+
+REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Pollen Forecast",
+    "DESCRIPTION": "The project proide a simple way to vizualize the pollen forecasts",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SWAGGER_UI_DIST": "SIDECAR",
+    "SWAGGER_UI_FAVICON_HREF": "SIDECAR",
+    "REDOC_DIST": "SIDECAR",
+}
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.cache.UpdateCacheMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.middleware.cache.FetchFromCacheMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -79,7 +105,6 @@ TEMPLATES = [
         },
     },
 ]
-print(BASE_DIR)
 
 WSGI_APPLICATION = 'meteopollen.wsgi.application'
 
@@ -87,14 +112,29 @@ WSGI_APPLICATION = 'meteopollen.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": ":memory:" if "test" in sys.argv else BASE_DIR / "db.sqlite3",
+#     }
+# }
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": ":memory:" if "test" in sys.argv else BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_DB"),
+        "USER": os.environ.get("POSTGRES_USER"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
+        "HOST": os.environ.get("POSTGRES_HOST", "db"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     }
 }
 
-
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379",
+    }
+}
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
@@ -153,3 +193,12 @@ Q_CLUSTER = {
 CORS_ALLOWED_ORIGINS = [
     "https://umami.home.antoinetavant.fr",
 ]
+
+
+UNFOLD = {
+    "SITE_TITLE": "Default Admin",
+    "SITE_HEADER": "Default Admin Panel",
+    "SITE_URL": "/",
+    "SHOW_COUNTS": True,
+    "SHOW_HISTORY": True,
+}
