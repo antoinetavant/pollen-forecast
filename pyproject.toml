@@ -53,6 +53,7 @@ dependencies = [
   "gunicorn>=23.0.0",
   "django-cors-headers>=4.4.0",
   "redis>=5.2.1",
+  "cloudpathlib[s3]>=0.21.0",
 ]
 
 [project.urls]

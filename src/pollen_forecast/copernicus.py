@@ -3,6 +3,9 @@ import cdsapi
 import xarray as xr
 import pandas as pd
 from pathlib import Path
+import logging
+from cloudpathlib import CloudPath
+logger = logging.getLogger(__name__)
 
 class PollenForcastCopernicusGeneric:
     def __init__(
@@ -34,7 +37,7 @@ class PollenForcastCopernicusGeneric:
         self.west = west
         self.leadtime_hour = leadtime_hour or [str(i) for i in range(0, 96)]
         self.level="0"
-        self.prefix = Path(prefix)
+        self.prefix = prefix
         self.params = {
             "model": self.model,
             'variable': self.variable,
@@ -47,17 +50,47 @@ class PollenForcastCopernicusGeneric:
             "area": [self.north, self.west, self.south, self.east],
         }
 
-        self.filename = (
-            self.prefix
-            / f"{'_'.join(self.variable)}_{self.date_start}_{self.date_end}.nc"
-        )
+        try :
+            self.filename = (
+                self.prefix
+                / f"{'_'.join(self.variable)}_{self.date_start}_{self.date_end}.nc"
+            )
+        except TypeError:
+            self.prefix = Path(self.prefix)
+            self.filename = (
+                self.prefix
+                / f"{'_'.join(self.variable)}_{self.date_start}_{self.date_end}.nc"
+            )
+        logger.debug(f"Filename set to {self.filename}")
 
-    def get_pollen_data(self):
+    def get_pollen_data(self, check_exists=True):
+        logger.debug("Ensuring the directory exists")
         self.filename.parent.mkdir(parents=True, exist_ok=True)
+        logger.debug("Retrieving data from Copernicus")
+        if check_exists and self.filename.exists():
+            logger.debug(f"File {self.filename} already exists")
+            return self.filename
+        logger.debug("File does not exist, downloading data")
+        need_upload = False
+        if isinstance(self.filename, Path):
+            target = str(self.filename)
+        elif isinstance(self.filename, CloudPath):
+            target = Path("/tmp/pollen_data")
+            need_upload = True
+        else: 
+            raise ValueError("filename must be a Path or CloudPath")
+        logger.debug(f"Target set to {target}")
+            
         self.c.retrieve(
             name=self.name,
             request=self.params,
-            target=self.filename)
+            target=target)
+        logger.debug("Data retrieved successfully")
+        if need_upload:
+            logger.debug("Uploading data to S3")
+            self.filename.upload_from(target)
+            logger.debug("Data uploaded successfully")
+            target.unlink()
         return self.filename
 
     def pollen_data(self, latitude, longitude):

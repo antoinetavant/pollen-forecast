@@ -45,7 +45,7 @@ levels_map = {
     "graminées": levels_graminees,
 }
 
-def get_pollen_api(date) -> PollenForcastCopernicusGeneric:
+def get_pollen_api(date, prefix=Path("./france_territory/")) -> PollenForcastCopernicusGeneric:
     """Init the PollenForcastCopernicusGeneric object and download the data if needed.
 
     Parameters
@@ -59,6 +59,7 @@ def get_pollen_api(date) -> PollenForcastCopernicusGeneric:
         The PollenForcastCopernicusGeneric object with the data.
 
     """
+    
     my_api = PollenForcastCopernicusGeneric(
         start=date,
         variable=[
@@ -73,7 +74,7 @@ def get_pollen_api(date) -> PollenForcastCopernicusGeneric:
         south=41.87,
         east=8.74,
         west=-5.33,
-        prefix=Path("./france_territory/"),
+        prefix=prefix,
     )
     if not my_api.filename.exists():
         logger.debug("Downloading Copernicus data")
@@ -86,11 +87,12 @@ def get_data_at_location(
     latitude=45.75,
     longitude=4.85,
     pollen_api=None,
+    prefix=Path("./france_territory/")  # Default prefix
 ):
     """Return a DataFrom with the pollen data for the given date and location.
     Columns are renamed using the POLLEN_TRANSLATIONS dictionary.
     """
     logger.debug("Fetching data")
-    my_api = pollen_api or get_pollen_api(date)
+    my_api = pollen_api or get_pollen_api(date, prefix=prefix)
     logger.debug(f"{latitude=}, {longitude=}")
     return my_api.pollen_data(latitude=latitude, longitude=longitude).rename(columns=POLLEN_TRANSLATIONS)
