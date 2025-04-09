@@ -93,7 +93,7 @@ class PollenDataAPI(APIView):
                 "the data has not be fetched. Fetching now. Check the scheduled task."
             )
             # load_pollen_data_fore_one_city(today=selected_date, city=prefecture_city)
-            load_pollen_data_for_prefectures()
+            load_pollen_data_for_prefectures(the_date=selected_date)
             pollen_data = PollenConcentrationForecasted.objects.filter(
                 city=prefecture_city,
                 forecasted_at=selected_date,

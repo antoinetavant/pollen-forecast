@@ -59,7 +59,8 @@ def get_pollen_api(date, prefix=Path("./france_territory/")) -> PollenForcastCop
         The PollenForcastCopernicusGeneric object with the data.
 
     """
-    
+    if isinstance(date, pd.Timestamp):
+        date = date.strftime("%Y-%m-%d")
     my_api = PollenForcastCopernicusGeneric(
         start=date,
         variable=[

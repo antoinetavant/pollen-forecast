@@ -49,6 +49,7 @@ class PollenForcastCopernicusGeneric:
             "leadtime_hour": self.leadtime_hour,
             "area": [self.north, self.west, self.south, self.east],
         }
+        self.ds = None
 
         try :
             self.filename = (
@@ -80,12 +81,14 @@ class PollenForcastCopernicusGeneric:
         else: 
             raise ValueError("filename must be a Path or CloudPath")
         logger.debug(f"Target set to {target}")
-            
+        logger.debug(f"{self.params=}")
         self.c.retrieve(
             name=self.name,
             request=self.params,
             target=target)
         logger.debug("Data retrieved successfully")
+        # Hot loading of the DataSet
+        self.ds = xr.open_dataset(target, decode_timedelta=True)
         if need_upload:
             logger.debug("Uploading data to S3")
             self.filename.upload_from(target)
@@ -94,10 +97,12 @@ class PollenForcastCopernicusGeneric:
         return self.filename
 
     def pollen_data(self, latitude, longitude):
-        ds = xr.open_dataset(self.filename, decode_timedelta=True)
-        ds.coords["longitude"] = (ds.coords["longitude"] + 180 ) % 360 - 180
+        if self.ds is None:
+            logger.debug("Loading data from file")
+            self.ds = xr.open_dataset(self.filename, decode_timedelta=True)
+        self.ds.coords["longitude"] = (self.ds.coords["longitude"] + 180 ) % 360 - 180
 
-        df = ds.sel(level=0,
+        df = self.ds.sel(level=0,
                     latitude=latitude,
                     longitude=longitude,
                     method='nearest').to_dataframe()
