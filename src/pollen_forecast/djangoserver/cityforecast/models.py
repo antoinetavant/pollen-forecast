@@ -1,5 +1,5 @@
 import json
-from django.db import models
+from django.contrib.gis.db import models
 import csv
 import os
 from django.db.models.signals import post_migrate
@@ -100,6 +100,11 @@ class City(models.Model):
     population = models.PositiveIntegerField(
         verbose_name="The population of the city at the 2021 sensus", default=None
     )
+    location = models.PointField(
+        geography=True,
+        help_text="The geographical location of the city.",
+        default=None,
+    )
 
     def __str__(self):
         """
@@ -150,6 +155,7 @@ class City(models.Model):
                     official_city_name=row["Nom Officiel Commune"],
                     latitude=float(row["latitude"]),
                     longitude=float(row["longitude"]),
+                    location=f"SRID=4326;POINT({row['longitude']} {row['latitude']})",
                     is_prefecture=row["is_prefecture"].lower() == "true",
                     is_sous_prefecture=row["is_sous_prefecture"].lower() == "true",
                     departement=departement,

@@ -21,6 +21,9 @@ import logging
 from django.db.models import Max, Q
 from django.http import JsonResponse
 from django.core.serializers.json import DjangoJSONEncoder
+from django.contrib.gis.geos import Point
+from django.contrib.gis.db.models.functions import Distance
+from django.db.models import F, FloatField
 import json
 
 logger = logging.getLogger(__name__)
@@ -240,3 +243,40 @@ class DepartementGeoJSONAPI(APIView):
             b'"coordinates": "', b'"coordinates": '
         ).replace(b']"\n', b"]\n")
         return response
+
+
+
+class ReverseGeocodeAPI(APIView):
+    """API endpoint to return the closest city based on latitude and longitude."""
+
+    def get(self, request, *args, **kwargs):
+        latitude = request.GET.get("lat", None)
+        longitude = request.GET.get("lon", None)
+
+        if not latitude or not longitude:
+            return Response({"error": "Latitude and longitude are required"}, status=400)
+
+        try:
+            latitude = float(latitude)
+            longitude = float(longitude)
+        except ValueError:
+            return Response({"error": "Invalid latitude or longitude"}, status=400)
+
+        user_location = Point(longitude, latitude, srid=4326)
+        print(user_location)
+
+        # Find the closest city using the City model
+        closest_city = (
+            City.objects.annotate(
+                distance=Distance("location", user_location)
+            )
+            .order_by("distance")
+            .first()
+        )
+
+        if closest_city:
+            return Response(
+                {"city": closest_city.official_city_name}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response({"error": "No city found near the given location"}, status=404)

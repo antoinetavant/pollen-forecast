@@ -5,6 +5,7 @@ from .api import (
     PollenDataAPI,
     DepartementGeoJSONAPI,
     PollenHistoryAPI,
+    ReverseGeocodeAPI
 )
 
 urlpatterns = [
@@ -27,6 +28,11 @@ urlpatterns = [
         "api/pollen-history-data/",
         PollenHistoryAPI.as_view(),
         name="pollen_history_data_api",
+    ),
+    path(
+        "api/reverse-geocode/",
+        ReverseGeocodeAPI.as_view(),
+        name="reverse-geocode_api",
     ),
     path("silk/", include("silk.urls", namespace="silk")),
 ]

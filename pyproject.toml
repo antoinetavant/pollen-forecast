@@ -54,6 +54,7 @@ dependencies = [
   "django-cors-headers>=4.4.0",
   "redis>=5.2.1",
   "cloudpathlib[s3]>=0.21.0",
+  "gdal>=3.2.2",
 ]
 
 [project.urls]

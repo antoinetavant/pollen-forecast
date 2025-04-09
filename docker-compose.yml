@@ -33,7 +33,7 @@ services:
       - django_network
 
   db:
-    image: postgres:latest
+    image: postgis/postgis:latest
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
