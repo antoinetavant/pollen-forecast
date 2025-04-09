@@ -21,7 +21,7 @@ async function fetchAndRenderChartJS() {
         // Prepare the data for Chart.js
         const labels = data.map(item => {
             const date = new Date(item.time);
-            return new Intl.DateTimeFormat('fr-FR', { month: 'long', day: 'numeric' }).format(date); // Format as day and month in French
+            return new Intl.DateTimeFormat('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' }).format(date); // Format as day, month, and year in French
         }); // Extract time labels
         const values = data.map(item => item[polenType]); // Extract values for the selected pollen type
         const colors = data.map(item => {

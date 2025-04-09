@@ -145,6 +145,10 @@ class PollenHistoryAPI(APIView):
         data[niveau_name] = pd.cut(
             data[pollen_type], levels, labels=level_names
         ).fillna(level_names[0])
+        
+        # remove duplicated indexes and sort by date
+        data = data[~data.index.duplicated(keep="first")]
+        data = data.sort_index()
 
         # Convert the index (time) to strings
         data.index = data.index.strftime("%Y-%m-%dT%H:%M:%S")
