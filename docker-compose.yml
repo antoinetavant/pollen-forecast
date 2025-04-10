@@ -8,9 +8,9 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - .env.dev
+      - .env.prod
     environment:
-      - DJANGO_SETTINGS_MODULE=pollen_forecast.djangoserver.meteopollen.settings.dev
+      - DJANGO_SETTINGS_MODULE=pollen_forecast.djangoserver.meteopollen.settings.prod
     depends_on:
       - db
     networks:
@@ -24,9 +24,9 @@ services:
     volumes:
       - .:/app
     env_file:
-      - .env.dev
+      - .env.prod
     environment:
-      - DJANGO_SETTINGS_MODULE=pollen_forecast.djangoserver.meteopollen.settings.dev
+      - DJANGO_SETTINGS_MODULE=pollen_forecast.djangoserver.meteopollen.settings.prod
     depends_on:
       - db
     networks:
@@ -37,7 +37,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     env_file:
-      - .env.dev
+      - .env.prod
     networks:
       - django_network
     
