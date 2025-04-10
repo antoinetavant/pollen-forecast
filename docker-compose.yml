@@ -3,8 +3,6 @@ services:
     build:
       context: .
     command: sh -c "make run"
-    volumes:
-      - .:/app
     ports:
       - "8000:8000"
     env_file:
@@ -21,8 +19,6 @@ services:
     build:
       context: .
     entrypoint: ["/entrypoint.migrate.sh"]
-    volumes:
-      - .:/app
     env_file:
       - .env.prod
     environment:
