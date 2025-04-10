@@ -23,15 +23,15 @@ help:
 
 install:
 	@printf "${YELLOW}Installing dependencies...${RESET}\n"
-	uv sync
+	pip install -r requirements.txt
 
 run:
 	@printf "${YELLOW}Starting development server...${RESET}\n"
-	uv run manage.py runserver
+	python src/pollen_forecast/djangoserver/manage.py runserver
 
 test:
 	@printf "${YELLOW}Running tests...${RESET}\n"
-	uv run manage.py test
+	python src/pollen_forecast/djangoserver/manage.py test
 
 lint:
 	@printf "${YELLOW}Running linter...${RESET}\n"
@@ -56,26 +56,26 @@ clean:
 
 migrate:
 	@printf "${YELLOW}Running migrations...${RESET}\n"
-	uv run src/djangoserver/manage.py migrate
+	python src/pollen_forecast/djangoserver/manage.py migrate
 
 migrations:
 	@printf "${YELLOW}Creating migrations...${RESET}\n"
-	uv run src/djangoserver/manage.py makemigrations
+	python src/pollen_forecast/djangoserver/manage.py makemigrations
 
 shell:
 	@printf "${YELLOW}Starting Django shell...${RESET}\n"
-	uv run src/djangoserver/manage.py shell_plus
+	upython src/pollen_forecast/djangoserver/manage.py shell_plus
 
 collectstatic:
 	@printf "${YELLOW}Collecting static files...${RESET}\n"
-	uv run src/djangoserver/manage.py collectstatic --noinput
+	python src/pollen_forecast/djangoserver/manage.py collectstatic --noinput
 
 app:
 	@if [ -z "$(name)" ]; then \
 		printf "${RED}Error: Please provide app name like 'make app name=core'${RESET}\n"; \
 		exit 1; \
 	fi; \
-	uv run manage.py startapp $(name) && \
+	python src/pollen_forecast/djangoserver/manage.py startapp $(name) && \
 	rm $(name)/tests.py && \
 	mkdir -p $(name)/tests/ && \
 	touch $(name)/tests/__init__.py && \
@@ -99,4 +99,4 @@ command:
 
 superuser:
 	@printf "${YELLOW}Creating superuser...${RESET}\n"
-	uv run src/djangoserver/manage.py createsuperuser
+	python src/pollen_forecast/djangoserver/manage.py createsuperuser
