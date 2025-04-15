@@ -31,5 +31,4 @@ jobs:
           # Arrêter le serveur Panel
           cd ${{vars.PROD_PATH}}
           git pull
-          git lfs pull
           EOF
