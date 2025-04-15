@@ -1,3 +1,4 @@
+from datetime import date, datetime, timedelta
 import logging
 import pandas as pd
 import difflib
@@ -38,3 +39,18 @@ def find_closest_city(lat: float, lon: float)-> str:
     commune = list_of_villes.loc[closest, "Nom Officiel Commune"]
     logger.info(f"Closest city: {commune}")
     return commune
+
+def find_closest_prefectures(
+    lat: float, lon: float, list_of_prefectures: pd.DataFrame
+) -> tuple[str, float, float]:
+    # closest city
+    distances = np.sqrt(
+        (list_of_prefectures["latitude"] - lat) ** 2
+        + (list_of_prefectures["longitude"] - lon) ** 2
+    )
+    closest = distances.idxmin()
+    commune = list_of_prefectures.loc[closest, "Nom Officiel Commune"]
+    lat = list_of_prefectures.loc[closest, "latitude"]
+    lon = list_of_prefectures.loc[closest, "longitude"]
+    logger.info(f"Closest city: {commune}")
+    return commune, lat, lon

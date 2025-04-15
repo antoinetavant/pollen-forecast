@@ -7,9 +7,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
   deploy:
@@ -34,5 +31,4 @@ jobs:
           # Arrêter le serveur Panel
           cd ${{vars.PROD_PATH}}
           git pull
-          git lfs pull
           EOF

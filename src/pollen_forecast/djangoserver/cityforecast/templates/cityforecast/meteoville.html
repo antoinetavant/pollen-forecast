@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block content %}
+{% load static %}
+
+
+<div class="container mt-5">
+    <h1 class="mb-4">Prévision du pollen</h1>
+
+<form id="pollenForm" method="post" class="mt-4">
+    {% csrf_token %}
+    <div class="row g-3">
+        <div class="col-md-4">
+            <label for="date" class="form-label">Date:</label>
+            <input type="date" id="date" name="date" value="{{ today }}" class="form-control">
+        </div>
+
+        <div class="col-md-4 position-relative">
+            <label for="city_name" class="form-label">Nom de la ville:</label>
+            <input type="text" id="city_name" name="city_name" value="{{ city_estimation }}" autocomplete="off" class="form-control">
+        </div>
+
+        <div class="col-md-4">
+            <label for="polen_type" class="form-label">Type de pollen:</label>
+            <select id="polen_type" name="polen_type" class="form-select">
+                {% for pollen in list_of_pollen_names %}
+                <option value="{{ pollen }}" {% if pollen == "Graminées" %}selected{% endif %}>
+                    {{ pollen }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="mt-3 text-end">
+            <button type="button" id="fetchData" class="btn btn-primary">Afficher la prévision</button>
+    </div>
+</form>
+    <!-- Loading Spinner -->
+
+<div id="loading-spinner" class="d-none text-center mt-3">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+<div id="chartjs-container" class="mt-4 card mx-auto" style="max-width: 80%; padding: 20px;">
+    <div class="card-body">
+        <canvas id="chartjs-canvas"></canvas>
+    </div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+<script src="{% static 'cityforecast/scripts/meteoville.js' %}"></script>
+
+<script>
+// Autocomplete logic for city name
+const cityInput = document.getElementById("city_name");
+const suggestionsBox = document.createElement("ul");
+suggestionsBox.classList.add("autocomplete-suggestions");
+cityInput.parentNode.appendChild(suggestionsBox);
+
+let currentFocus = -1;
+
+cityInput.addEventListener("input", function () {
+    const query = cityInput.value;
+    currentFocus = -1; // Reset focus
+    suggestionsBox.innerHTML = ""; // Clear suggestions
+
+    if (query.length > 1) {
+        fetch(`/api/city-autocomplete/?q=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                data.forEach((city) => {
+                    const suggestion = document.createElement("li");
+                    suggestion.textContent = city;
+                    suggestion.classList.add("list-group-item", "list-group-item-action");
+                    suggestion.addEventListener("click", function () {
+                        cityInput.value = city;
+                        suggestionsBox.innerHTML = "";
+                    });
+                    suggestionsBox.appendChild(suggestion);
+                });
+            });
+    } else if (query.length === 0) {
+        // Add "Use my position" suggestion
+        const useMyPosition = document.createElement("li");
+        useMyPosition.textContent = "Use my position";
+        useMyPosition.classList.add("list-group-item", "list-group-item-action", "text-primary");
+        useMyPosition.addEventListener("click", function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        fetch(`/api/reverse-geocode/?lat=${latitude}&lon=${longitude}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                cityInput.value = data.city; // Assuming the API returns a city name
+                                suggestionsBox.innerHTML = "";
+                            })
+                            .catch(() => {
+                                alert("Unable to fetch city name from your location.");
+                            });
+                    },
+                    () => {
+                        alert("Unable to retrieve your location.");
+                    }
+                );
+            } else {
+                alert("Geolocation is not supported by your browser.");
+            }
+        });
+        suggestionsBox.appendChild(useMyPosition);
+    }
+});
+
+cityInput.addEventListener("keydown", function (e) {
+    const items = suggestionsBox.getElementsByTagName("li");
+    if (e.key === "ArrowDown") {
+        currentFocus++;
+        if (currentFocus >= items.length) currentFocus = 0;
+        highlightSuggestion(items);
+    } else if (e.key === "ArrowUp") {
+        currentFocus--;
+        if (currentFocus < 0) currentFocus = items.length - 1;
+        highlightSuggestion(items);
+    } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (currentFocus > -1 && items[currentFocus]) {
+            items[currentFocus].click();
+        }
+    }
+});
+
+function highlightSuggestion(items) {
+    Array.from(items).forEach(item => item.classList.remove("active"));
+    if (items[currentFocus]) {
+        items[currentFocus].classList.add("active");
+        items[currentFocus].scrollIntoView({ block: "nearest" });
+    }
+}
+
+// Hide suggestions when clicking outside
+document.addEventListener("click", function (e) {
+    if (!suggestionsBox.contains(e.target) && e.target !== cityInput) {
+        suggestionsBox.innerHTML = "";
+    }
+});
+
+
+// Call  Chart.js rendering functions when the page loads
+document.addEventListener('DOMContentLoaded', function () {
+    fetchAndRenderChartJS(); // Chart.js chart
+});
+
+// Add event listener for the button to fetch and render the chart on click
+document.getElementById('fetchData').addEventListener('click', function () {
+    fetchAndRenderChartJS(); // Chart.js chart
+});
+</script>
+<style>
+/* Add some basic styling for the autocomplete suggestions */
+.autocomplete-suggestions {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    position: absolute;
+    background: white;
+    z-index: 1000;
+    width: 100%; /* Match the width of the input field */
+    box-sizing: border-box; /* Ensure padding and border are included in the width */
+    display: none; /* Hide by default */
+}
+
+.autocomplete-suggestions li {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.autocomplete-suggestions:not(:empty) {
+    display: block; /* Show only if there are list items */
+}
+
+.autocomplete-suggestions li:hover {
+    background-color: #f0f0f0;
+}
+
+.autocomplete-suggestions li.active {
+    background-color: #f0f0f0;
+
+}
+
+#loading-spinner {
+    margin-top: 20px;
+}
+
+#chartjs-container {
+    margin: 0 auto; /* Center the chart horizontally */
+    max-width: 80%; /* Set the maximum width of the chart */
+    padding: 20px; /* Add padding around the chart */
+}
+
+#chartjs-canvas {
+    height: 200px !important; /* Set the height of the Chart.js canvas */
+}
+</style>
+{% endblock %}

@@ -7,12 +7,10 @@ name = "pollen-forecast"
 dynamic = ["version"]
 description = ''
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = "MIT"
 keywords = []
-authors = [
-  { name = "Antoine TAVANT", email = "antoine.tavant@ecoco2.com" },
-]
+authors = [{ name = "Antoine TAVANT", email = "antoine.tavant@ecoco2.com" }]
 classifiers = [
   "Development Status :: 4 - Beta",
   "Programming Language :: Python",
@@ -28,11 +26,35 @@ dependencies = [
   "cdsapi",
   "pandas",
   "xarray",
-  "netCDF4",
+  "netcdf4",
   "matplotlib",
   "watchfiles",
   # "cartopy",
   "setuptools",
+  "django>=5.1.7",
+  "django-extensions>=3.2.3",
+  "django-unfold>=0.53.0",
+  "drf-spectacular[sidecar]>=0.28.0",
+  "pre-commit>=4.2.0",
+  "psycopg>=3.2.6",
+  "python-dotenv>=1.1.0",
+  "altair>=5.4.1",
+  "geoip2>=4.8.1",
+  "django-q2>=1.7.6",
+  "blessed>=1.20.0",
+  "pytest-django>=4.10.0",
+  "pytest-sugar>=1.0.0",
+  "djangorestframework>=3.15.2",
+  "markdown>=3.7",
+  "django-filter>=24.3",
+  "psycopg2-binary>=2.9.10",
+  "django-debug-toolbar>=4.4.6",
+  "django-silk>=5.2.0",
+  "gunicorn>=23.0.0",
+  "django-cors-headers>=4.4.0",
+  "redis>=5.2.1",
+  "cloudpathlib[s3]>=0.21.0",
+  "gdal==3.6.2",
 ]
 
 [project.urls]
@@ -44,9 +66,7 @@ Source = "https://github.com/Antoine TAVANT/pollen-forecast"
 path = "src/pollen_forecast/__about__.py"
 
 [tool.hatch.envs.types]
-extra-dependencies = [
-  "mypy>=1.0.0",
-]
+extra-dependencies = ["mypy>=1.0.0"]
 [tool.hatch.envs.types.scripts]
 check = "mypy --install-types --non-interactive {args:src/pollen_forecast tests}"
 
@@ -54,44 +74,40 @@ check = "mypy --install-types --non-interactive {args:src/pollen_forecast tests}
 source_pkgs = ["pollen_forecast", "tests"]
 branch = true
 parallel = true
-omit = [
-  "src/pollen_forecast/__about__.py",
-]
+omit = ["src/pollen_forecast/__about__.py"]
 
 [tool.coverage.paths]
-pollen_forecast = ["src/pollen_forecast", "*/pollen-forecast/src/pollen_forecast"]
+pollen_forecast = [
+  "src/pollen_forecast",
+  "*/pollen-forecast/src/pollen_forecast",
+]
 tests = ["tests", "*/pollen-forecast/tests"]
 
 [tool.coverage.report]
-exclude_lines = [
-  "no cov",
-  "if __name__ == .__main__.:",
-  "if TYPE_CHECKING:",
-]
+exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
 
 [tool.hatch.envs.prod]
-dependencies = [
-  "setuptools",
-]
+dependencies = ["setuptools"]
 [tool.hatch.envs.prod.scripts]
 serve = "panel serve src/pollen_forecast/panel_app.py --address 0.0.0.0 --port 5006 --allow-websocket-origin=antoinetavant.fr"
 
 [tool.hatch.envs.taipy]
-dependencies = [
-  "taipy",
-  "plotly"
-]
+dependencies = ["taipy", "plotly"]
 
 [tool.hatch.envs.taipy.scripts]
 serve = "python src/pollen_forecast/taipy_app.py"
 
 
 [tool.hatch.envs.streamlit]
-dependencies = [
-  "streamlit",
-  "streamlit-searchbox",
-  "streamlit-geolocation",
-]
+dependencies = ["streamlit", "streamlit-searchbox", "streamlit-geolocation"]
 
 [tool.hatch.envs.streamlit.scripts]
 serve = "streamlit run --server.port 5006 --server.baseUrlPath pollen  --browser.gatherUsageStats false --server.runOnSave true   src/pollen_forecast/Météo_pollen.py"
+
+[tool.pytest.ini_options]
+log_cli = true
+addopts = "--nomigrations --reuse-db -vv"
+pythonpath = "src/pollen_forecast/djangoserver"
+DJANGO_SETTINGS_MODULE = "meteopollen.settings"
+# -- recommended but optional:
+python_files = ["test_*.py", "*_test.py", "testing/python/*.py"]
