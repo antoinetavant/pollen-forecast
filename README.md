@@ -1,47 +1,46 @@
 # pollen-forecast
 
-[![PyPI - Version](https://img.shields.io/pypi/v/pollen-forecast.svg)](https://pypi.org/project/pollen-forecast)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pollen-forecast.svg)](https://pypi.org/project/pollen-forecast)
-
------
-
 Pollen-Forecast is a tool to view the pollen forecast for a given location.
 It uses the forecast data from the [Copernicus Data Store (CDS) API](https://ads.atmosphere.copernicus.eu/cdsapp#!/dataset/cams-europe-air-quality-forecasts?tab=overview).
 
-Visualisation is done with HoloViz Pannel.
+The application is built using Django for the backend and provides a user-friendly interface for visualizing pollen forecasts.
 
-You can access the application at [antoinetavant.fr/app](https://antoinetavant.fr/app).
+You can access the application at [antoinetavant.fr/app](https://pollen.antoinetavant.fr).
 
 ## Usage
 
 ### Requirements
-You need a ECMWF account to access the data (see [Resources](#resources)).
+You need an ECMWF account to access the data (see [Resources](#resources)).
 
-The project uses [hatch](https://hatch.pypa.io/latest/) to manage the environment and the dependencies.
-You can install it with:
+### Setup
 
+1. Install the required dependencies:
+   ```console
+   pip install -r requirements.txt
+   ```
+
+2. Apply database migrations:
+   ```console
+   python src/pollen_forecast/djangoserver/manage.py migrate
+   ```
+
+3. Start the development server:
+   ```console
+   python src/pollen_forecast/djangoserver/manage.py runserver
+   ```
+
+4. Access the application at `http://127.0.0.1:8000`.
+
+### Production Deployment
+
+For production, use `uvicorn` to serve the application:
 ```console
-pipx install hatch
+uvicorn src.pollen_forecast.djangoserver.meteopollen.wsgi:application --host 0.0.0.0 --port 8000
 ```
-
-### Launch the application
-
-Run the pollen forecast viewer with:
-
-```console
-hatch run prod:serve
-```
-
-Or directly with:
-
-```console
-panel serve src/pollen_forecast/app.py
-```
-
 
 ## Resources
 
-### Similair projects
+### Similar Projects
 
 The Pollen forecast is available on the site [pollens.fr](https://www.pollens.fr/cartes-de-modelisations) but the temporal resolution is not as high as the one provided by the Copernicus Data Store.
 
@@ -57,7 +56,6 @@ The API is documented [here](https://ads.atmosphere.copernicus.eu/api-how-to).
 Follow the instructions to create an account and get the API key.
 
 The API key should be stored in a file named `.cdsapirc` in the user's home directory.
-
 
 ## License
 
