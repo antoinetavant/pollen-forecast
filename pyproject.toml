@@ -54,7 +54,7 @@ dependencies = [
   "django-cors-headers>=4.4.0",
   "redis>=5.2.1",
   "cloudpathlib[s3]>=0.21.0",
-  "gdal==3.6.2",
+  "gdal==3.8.4",
 ]
 
 [project.urls]
@@ -85,24 +85,6 @@ tests = ["tests", "*/pollen-forecast/tests"]
 
 [tool.coverage.report]
 exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
-
-[tool.hatch.envs.prod]
-dependencies = ["setuptools"]
-[tool.hatch.envs.prod.scripts]
-serve = "panel serve src/pollen_forecast/panel_app.py --address 0.0.0.0 --port 5006 --allow-websocket-origin=antoinetavant.fr"
-
-[tool.hatch.envs.taipy]
-dependencies = ["taipy", "plotly"]
-
-[tool.hatch.envs.taipy.scripts]
-serve = "python src/pollen_forecast/taipy_app.py"
-
-
-[tool.hatch.envs.streamlit]
-dependencies = ["streamlit", "streamlit-searchbox", "streamlit-geolocation"]
-
-[tool.hatch.envs.streamlit.scripts]
-serve = "streamlit run --server.port 5006 --server.baseUrlPath pollen  --browser.gatherUsageStats false --server.runOnSave true   src/pollen_forecast/Météo_pollen.py"
 
 [tool.pytest.ini_options]
 log_cli = true

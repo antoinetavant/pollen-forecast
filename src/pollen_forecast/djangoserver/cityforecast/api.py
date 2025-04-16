@@ -28,24 +28,30 @@ import json
 
 logger = logging.getLogger(__name__)
 
+
 class CityAutocompleteAPI(APIView):
     """API endpoint to return city autocomplete suggestions."""
 
     def get(self, request, *args, **kwargs):
         query = request.GET.get("q", "")
         if query:
-            if connection.vendor == 'postgresql':
+            if connection.vendor == "postgresql":
                 # Use TrigramSimilarity for PostgreSQL
                 from django.contrib.postgres.search import TrigramSimilarity
-                cities = City.objects.annotate(
-                    similarity=TrigramSimilarity('official_city_name', query)
-                ).filter(similarity__gt=0.3).order_by('-similarity')[:10]
+
+                cities = (
+                    City.objects.annotate(
+                        similarity=TrigramSimilarity("official_city_name", query)
+                    )
+                    .filter(similarity__gt=0.3)
+                    .order_by("-similarity")[:10]
+                )
             else:
                 # Fallback for SQLite or other databases
                 cities = City.objects.filter(
                     official_city_name__icontains=query
                 ).order_by("-population")[:5]
-            
+
             city_names = list(cities.values_list("official_city_name", flat=True))
             return Response(city_names, status=status.HTTP_200_OK)
         return Response([], status=status.HTTP_200_OK)
@@ -112,7 +118,6 @@ class PollenDataAPI(APIView):
         # Pivot the data for easier processing
         data = data.set_index("time")[["value"]].rename(columns={"value": pollen_type})
 
-
         # Add level names to data for chart coloring
         levels = levels_map[plant_types[pollen_type]]
         niveau_name = f"{pollen_type}_niveau"
@@ -122,6 +127,7 @@ class PollenDataAPI(APIView):
         data.index = data.index.strftime("%Y-%m-%dT%H:%M:%S")
         data = data.reset_index(names="time")
         return Response(data.to_dict(orient="records"))
+
 
 class PollenHistoryAPI(APIView):
     def get(self, request, *args, **kwargs):
@@ -148,7 +154,7 @@ class PollenHistoryAPI(APIView):
         data[niveau_name] = pd.cut(
             data[pollen_type], levels, labels=level_names
         ).fillna(level_names[0])
-        
+
         # remove duplicated indexes and sort by date
         data = data[~data.index.duplicated(keep="first")]
         data = data.sort_index()
@@ -158,6 +164,7 @@ class PollenHistoryAPI(APIView):
         data = data.reset_index(names="time")
         print(data)
         return Response(data.to_dict(orient="records"))
+
 
 def get_color(value, pollen_type):
     levels = levels_map[plant_types[pollen_type]]
@@ -245,7 +252,6 @@ class DepartementGeoJSONAPI(APIView):
         return response
 
 
-
 class ReverseGeocodeAPI(APIView):
     """API endpoint to return the closest city based on latitude and longitude."""
 
@@ -254,7 +260,9 @@ class ReverseGeocodeAPI(APIView):
         longitude = request.GET.get("lon", None)
 
         if not latitude or not longitude:
-            return Response({"error": "Latitude and longitude are required"}, status=400)
+            return Response(
+                {"error": "Latitude and longitude are required"}, status=400
+            )
 
         try:
             latitude = float(latitude)
@@ -267,9 +275,7 @@ class ReverseGeocodeAPI(APIView):
 
         # Find the closest city using the City model
         closest_city = (
-            City.objects.annotate(
-                distance=Distance("location", user_location)
-            )
+            City.objects.annotate(distance=Distance("location", user_location))
             .order_by("distance")
             .first()
         )
@@ -279,4 +285,6 @@ class ReverseGeocodeAPI(APIView):
                 {"city": closest_city.official_city_name}, status=status.HTTP_200_OK
             )
         else:
-            return Response({"error": "No city found near the given location"}, status=404)
+            return Response(
+                {"error": "No city found near the given location"}, status=404
+            )

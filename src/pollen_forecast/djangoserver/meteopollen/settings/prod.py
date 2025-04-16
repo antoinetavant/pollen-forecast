@@ -1,5 +1,5 @@
-import os
 from .base import *
+from pollen_forecast import ROOT_DIR
 
 DEBUG = False
 ALLOWED_HOSTS = ["pollen.antoinetavant.fr"]
@@ -11,6 +11,7 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+X_FRAME_OPTIONS = "DENY"
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 STATIC_ROOT = ROOT_DIR / "live" / "statics"
+SECURE_HSTS_PRELOAD = True
